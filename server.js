@@ -192,7 +192,6 @@ router.route('/test')
         var ingredients = req.body.ingredients.split("\n");
         var lines = {};
         var i;
-        
 
         for (i in ingredients) {
 

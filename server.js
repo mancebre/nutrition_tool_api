@@ -186,8 +186,38 @@ router.route('/test')
             "vinegar":  2048,
             "walnut":  12154,
             "wine":  14084,
-            "yeast":  18375
+            "yeast":  18375,
+            "blueberries": 9050,
+            "strawberries": 9316,
+            "vanilla extract": 2050
         };
+        var mesure = [
+            'pat',
+            'tbsp',
+            'cup',
+            'stick',
+            'oz',
+            'cubic inch',
+            'crumbled',
+            'not packed',
+            'diced',
+            'shredded',
+            'slice',
+            'sliced',
+            'melted',
+            'wedge',
+            'diced',
+            'large curd',
+            'small curd',
+            'whipped',
+            'small',
+            'crumbled',
+            'box',
+            'gram',
+            'pound',
+            'ounce',
+            'pint'
+        ];
 
         var ingredients = req.body.ingredients.split("\n");
         var lines = {};
@@ -209,17 +239,30 @@ router.route('/test')
 
                     line.amount = eval(temp[0]);
                     line.measure = temp[1].trim();
+                    line.measure = line.measure.replace('Tablespoons', 'tbsp').replace('tablespoons', 'tbsp').replace('Tablespoon', 'tbsp').replace('tablespoon', 'tbsp');
+                    line.measure = line.measure.replace('pints', 'pint').replace('cups', 'cup').replace('cp', 'cup').replace('C', 'cup');
 
                     delete temp[0];
                     delete temp[1];
 
                     line.ingredient = temp.join(" ").trim();
 
+                    var finded = false;
                     for (val in temp) {
                         if (ingredientsMapper[temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim()] != undefined) {
                             line.ingredient = temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim();
+                            finded = true;
                         }
                     }
+
+                    if (!finded) {
+                        for (mapp in ingredientsMapper) {
+                            if (line.ingredient.indexOf(mapp) > -1) {
+                                line.ingredient = mapp;
+                            }
+                        }
+                    }
+
 
                     delete temp;
                     lines[i] = line;

@@ -50,10 +50,13 @@ router.get('/', function(req, res) {
 
 // test mysql
 // ----------------------------------------------------
-router.route('/test')
+router.route('/testing')
 
     .post(function(req, res) {
 
+        var ingredients = req.body.ingredients.split("\n");
+        var lines = {};
+        var i;
         var ingredientsMapper = {
             "allspice": 2001,
             "almond":  12061,
@@ -102,7 +105,7 @@ router.route('/test')
             "cream":  1054,
             "cucumber":  11205,
             "curry":  2015,
-            "dill":  2017,
+            //"dill":  2017,
             "duck":  5142,
             "egg":  1123,
             "eggs":  1123,
@@ -174,6 +177,7 @@ router.route('/test')
             "squash":  11477,
             "suet":  80066,
             "sugar":  19335,
+            "salt": 2047,
             "sultanas":  9132,
             "sweetcorn":  11167,
             "sweet pepper":  11821,
@@ -219,9 +223,146 @@ router.route('/test')
             'pint'
         ];
 
+        for (i in ingredients) {
+
+            if (ingredients[i] != null && ingredients[i] != undefined && ingredients[i].trim().length > 0) {
+
+                var line = {};
+                var temp = ingredients[i].split(" ");
+
+                if (temp.length > 3) {
+
+                    if (isNaN(temp[0])) {
+                        var split = temp[0].replace(/[^a-zA-Z0-9]/g,'_').split("_");
+                        temp[0] = parseInt(split[0], 10) / parseInt(split[1], 10);
+                    }
+
+                    line.amount = eval(temp[0]);
+                    line.measure = temp[1].trim();
+                    line.measure = line.measure.replace('Tablespoons', 'tbsp').replace('tablespoons', 'tbsp').replace('Tablespoon', 'tbsp').replace('tablespoon', 'tbsp').replace('tsp', 'tbsp').toLowerCase().trim();
+                    line.measure = line.measure.replace('pints', 'pint').replace('cups', 'cup').replace('cp', 'cup').replace('C', 'cup').toLowerCase().trim();
+
+                    line.keyword = temp.join(" ").trim();
+
+                    delete temp[0];
+                    delete temp[1];
+
+                    line.ingredient = temp.join(" ").trim();
+                    if (line.ingredient.indexOf(" or ") > -1) {
+                        var tempIngredient = line.ingredient.split(" or ");
+                        line.ingredient = tempIngredient[0];
+                    }
+                    line.ingredient = line.ingredient.replace(/[^a-zA-Z0-9]/g, ' ').trim();
+
+                    if (mesure.indexOf(line.measure) == -1) {
+                        line.ingredient = line.measure = ' ' + line.ingredient;
+                        line.measure = null;
+                    }
+
+                    for (val in temp) {
+                        if (ingredientsMapper[temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim()] != undefined) {
+                            line.ingredient = temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim();
+                            finded = true;
+                        }
+                    }
+
+                    //if (!finded) {
+                    //    for (mapp in ingredientsMapper) {
+                    //        if (line.ingredient.indexOf(mapp) > -1) {
+                    //            line.ingredient = mapp;
+                    //        }
+                    //    }
+                    //}
+
+                    delete temp;
+                    lines[i] = line;
+
+                } else {
+                    lines[i] = {amount: null, measure: null, ingredient: ingredients[i].trim(), keyword: temp.join(" ").trim()};
+                }
+            }
+
+        }
+
+        var oneLine;
+        var keywords = [];
+        var items = [];
+
+        for (oneLine in lines) {
+            keywords.push(lines[oneLine].ingredient.replace(/[^a-zA-Z0-9]/g, ' ').trim());
+            items.push(oneLine);
+        }
+
+        // Async task (same in all examples in this chapter)
+        function async(arg, keywords, callback) {
+
+            connection.query("SELECT * FROM `FOOD_DES` WHERE MATCH (`Long_Desc`, `Shrt_Desc`) AGAINST (?) AND `ComName` IS NULL AND `ManufacName` IS NULL;", [keywords], function(err, result)
+            {
+                if (err){
+                    callback(err);
+                }
+                else {
+                    if (Object.keys(result).length > 0){
+                        callback(result[0].Long_Desc);
+                    } else {
+                        callback(null);
+                    }
+                }
+
+            });
+        }
+// Final task (same in all the examples)
+        function final() {
+
+            for (i in results) {
+
+                if (lines[i] != undefined) {
+                    lines[i].ingredient = results[i];
+                }
+            }
+            res.json(lines);
+        }
+
+// A simple async series:
+        var results = [];
+
+        function series(item, keyword) {
+
+            if(item) {
+                async( item, keyword, function(result) {
+                    results.push(result);
+                    return series(items.shift(), keywords.shift());
+                });
+            } else {
+                return final();
+            }
+        }
+        series(items.shift(), keywords.shift());
+
+    })
+
+// test mysql
+// ----------------------------------------------------
+router.route('/test')
+
+    .post(function(req, res) {
+
         var ingredients = req.body.ingredients.split("\n");
         var lines = {};
         var i;
+
+        function getIngredient(keywords, callback)
+        {
+            connection.query("SELECT * FROM `FOOD_DES` WHERE MATCH (`Long_Desc`, `Shrt_Desc`) AGAINST (?) AND `ComName` IS NULL AND `ManufacName` IS NULL;", [keywords], function(err, result)
+            {
+                if (err)
+                    callback(err,null);
+                else
+                    callback(null,result[0].Long_Desc);
+
+            });
+
+        }
 
         for (i in ingredients) {
 
@@ -245,24 +386,39 @@ router.route('/test')
                     delete temp[0];
                     delete temp[1];
 
-                    line.ingredient = temp.join(" ").trim();
+                    //line.ingredient = temp.join(" ").trim();
 
                     var finded = false;
-                    for (val in temp) {
-                        if (ingredientsMapper[temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim()] != undefined) {
-                            line.ingredient = temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim();
-                            finded = true;
-                        }
+                    var callback = function(err, data) {
+                        line.ingredient = data;
                     }
 
-                    if (!finded) {
-                        for (mapp in ingredientsMapper) {
-                            if (line.ingredient.indexOf(mapp) > -1) {
-                                line.ingredient = mapp;
-                            }
+                        //call Fn for db query with callback
+                    getIngredient(temp.join(" ").trim(), callback, function(err,data){
+                        if (err) {
+                            // error handling code goes here
+                            console.log("ERROR : ",err);
+                        } else {
+                            // code to execute on data retrieval
+                            console.log("result from db is : ",data);
+                            callback(data);
                         }
-                    }
 
+                    });
+                    //for (val in temp) {
+                    //    if (ingredientsMapper[temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim()] != undefined) {
+                    //        line.ingredient = temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim();
+                    //        finded = true;
+                    //    }
+                    //}
+
+                    //if (!finded) {
+                    //    for (mapp in ingredientsMapper) {
+                    //        if (line.ingredient.indexOf(mapp) > -1) {
+                    //            line.ingredient = mapp;
+                    //        }
+                    //    }
+                    //}
 
                     delete temp;
                     lines[i] = line;

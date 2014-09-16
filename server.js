@@ -262,7 +262,7 @@ router.route('/testing')
                     for (val in temp) {
                         if (ingredientsMapper[temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim()] != undefined) {
                             line.ingredient = temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim();
-                            finded = true;
+                            //finded = true;
                         }
                     }
 

@@ -23,7 +23,7 @@ var IngredientsMapper     = require('./app/models/ingredientsMapper');
 var mysql      = require('mysql');
 var connection = mysql.createConnection({
     multipleStatements: true,
-    host     : 'localhost',
+    host     : '104.131.17.237',
     user     : 'root',
     password : 'vitezkoja',
     port : 3306, //port mysql

@@ -24,7 +24,7 @@ $( "#searchForm" ).submit(function( event ) {
   // Get some values from elements on the page:
   var $form = $( this ),
     term = $("#rec").val();
-    url = 'http://104.131.17.237:8080/api/test';
+    url = 'http://104.131.17.237:8080/api/testing';
  
 jQuery.ajax(
 

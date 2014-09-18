@@ -15,15 +15,35 @@ app.use(cors());
 
 var port     = process.env.PORT || 8080; // set our port
 
-var mongoose   = require('mongoose');
-mongoose.connect('mongodb://localhost/my_database'); // connect to our database
-var Bear     = require('./app/models/bear');
-var IngredientsMapper     = require('./app/models/ingredientsMapper');
+//get server ip
+var os = require('os')
+
+var interfaces = os.networkInterfaces();
+var addresses = [];
+for (k in interfaces) {
+    for (k2 in interfaces[k]) {
+        var address = interfaces[k][k2];
+        if (address.family == 'IPv4' && !address.internal) {
+            addresses.push(address.address)
+        }
+    }
+}
+
+var host = addresses[0];
+if (host != "104.131.17.237") {
+    host = "localhost";
+}
+
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://'+host+'/my_database'); // connect to mongodb
+
+var Bear = require('./app/models/bear');
+var IngredientsMapper = require('./app/models/ingredientsMapper');
 
 var mysql      = require('mysql');
 var connection = mysql.createConnection({
     multipleStatements: true,
-    host     : '104.131.17.237',
+    host     : host,
     user     : 'root',
     password : 'vitezkoja',
     port : 3306, //port mysql
@@ -228,9 +248,10 @@ router.route('/testing')
             if (ingredients[i] != null && ingredients[i] != undefined && ingredients[i].trim().length > 0) {
 
                 var line = {};
+                ingredients[i] = ingredients[i].replace(" or ", " ").replace(" and ", " ").replace(" of ", " ").toLowerCase().trim();
                 var temp = ingredients[i].split(" ");
 
-                if (temp.length > 3) {
+                if (temp.length >= 3) {
 
                     if (isNaN(temp[0])) {
                         var split = temp[0].replace(/[^a-zA-Z0-9]/g,'_').split("_");
@@ -299,6 +320,7 @@ router.route('/testing')
             connection.query("SELECT * FROM `FOOD_DES` WHERE MATCH (`Long_Desc`, `Shrt_Desc`) AGAINST (?) AND `ComName` IS NULL AND `ManufacName` IS NULL;", [keywords], function(err, result)
             {
                 if (err){
+                    console.log(err);
                     callback(err);
                 }
                 else {
@@ -340,129 +362,6 @@ router.route('/testing')
         series(items.shift(), keywords.shift());
 
     })
-
-// test mysql
-// ----------------------------------------------------
-router.route('/test')
-
-    .post(function(req, res) {
-
-        var ingredients = req.body.ingredients.split("\n");
-        var lines = {};
-        var i;
-
-        function getIngredient(keywords, callback)
-        {
-            connection.query("SELECT * FROM `FOOD_DES` WHERE MATCH (`Long_Desc`, `Shrt_Desc`) AGAINST (?) AND `ComName` IS NULL AND `ManufacName` IS NULL;", [keywords], function(err, result)
-            {
-                if (err)
-                    callback(err,null);
-                else
-                    callback(null,result[0].Long_Desc);
-
-            });
-
-        }
-
-        for (i in ingredients) {
-
-            if (ingredients[i] != null && ingredients[i] != undefined && ingredients[i].trim().length > 0) {
-
-                var line = {};
-                var temp = ingredients[i].split(" ");
-
-                if (temp.length > 3) {
-
-                    if (isNaN(temp[0])) {
-                        var split = temp[0].replace(/[^a-zA-Z0-9]/g,'_').split("_");
-                        temp[0] = parseInt(split[0], 10) / parseInt(split[1], 10);
-                    }
-
-                    line.amount = eval(temp[0]);
-                    line.measure = temp[1].trim();
-                    line.measure = line.measure.replace('Tablespoons', 'tbsp').replace('tablespoons', 'tbsp').replace('Tablespoon', 'tbsp').replace('tablespoon', 'tbsp');
-                    line.measure = line.measure.replace('pints', 'pint').replace('cups', 'cup').replace('cp', 'cup').replace('C', 'cup');
-
-                    delete temp[0];
-                    delete temp[1];
-
-                    //line.ingredient = temp.join(" ").trim();
-
-                    var finded = false;
-                    var callback = function(err, data) {
-                        line.ingredient = data;
-                    }
-
-                        //call Fn for db query with callback
-                    getIngredient(temp.join(" ").trim(), callback, function(err,data){
-                        if (err) {
-                            // error handling code goes here
-                            console.log("ERROR : ",err);
-                        } else {
-                            // code to execute on data retrieval
-                            console.log("result from db is : ",data);
-                            callback(data);
-                        }
-
-                    });
-                    //for (val in temp) {
-                    //    if (ingredientsMapper[temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim()] != undefined) {
-                    //        line.ingredient = temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim();
-                    //        finded = true;
-                    //    }
-                    //}
-
-                    //if (!finded) {
-                    //    for (mapp in ingredientsMapper) {
-                    //        if (line.ingredient.indexOf(mapp) > -1) {
-                    //            line.ingredient = mapp;
-                    //        }
-                    //    }
-                    //}
-
-                    delete temp;
-                    lines[i] = line;
-
-                } else {
-                    lines[i] = {amount: null, measure: null, ingredient: ingredients[i].trim()};
-                }
-            }
-
-        }
-
-        res.json(lines);
-
-    })
-
-// ingredients mapper
-// ----------------------------------------------------
-router.route('/mapper')
-
-    // map ingredients
-    .post(function(req, res) {
-
-        var ingredientsMapper = new IngredientsMapper();
-        ingredientsMapper.name = req.body.name;
-        ingredientsMapper.mysqlId = req.body.id;
-
-        ingredientsMapper.save(function(err) {
-            if (err)
-                res.send(err);
-
-            res.json({ message: 'Mapper created!' });
-        });
-
-    })
-
-    // get all
-    .get(function(req, res) {
-        IngredientsMapper.find(function(err, bears) {
-            if (err)
-                res.send(err);
-
-            res.json(bears);
-        });
-    });
 
 // on routes that end in /bears
 // ----------------------------------------------------
@@ -544,4 +443,4 @@ app.use('/api', router);
 // START THE SERVER
 // =============================================================================
 app.listen(port);
-console.log('Magic happens on port ' + port);
+console.log('Magic happens on port ' + port + '. Host is: ' + host);

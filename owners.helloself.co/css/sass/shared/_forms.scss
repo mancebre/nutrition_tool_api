@@ -1,0 +1,145 @@
+
+/*****************************************************************
+    Forms
+*****************************************************************/
+
+// Default Fields and Textarea Style
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+textarea {
+    padding: 10px;
+    background: #f5f5f5;
+    border: 1px solid $primary-border-color;
+    @include border-radius(2px);
+
+    &:hover {
+        background: #f1f1f1;
+        border: 1px solid darken($primary-border-color, 10%);
+    }
+
+    &:focus {
+        background: #ffffff;
+        border: 1px solid darken($primary-border-color, 20%);
+    }
+
+    @include input-placeholder {
+        color: #cccccc;
+    }
+}
+
+
+// Default Select Style
+.select-holder {
+    background: #ffffff;
+    border: 1px solid $primary-border-color;
+    @include border-radius(3px);
+    @include transition(border 0.3s ease-in-out);
+    @include relative(top 0 left 0);
+    cursor: pointer;
+
+    &:hover {
+        border: 1px solid #9B9B9B;
+    }
+
+    .select-text {
+        padding: 10px 25px 9px 10px;
+        @include font-size(13px);
+    }
+
+    select {
+        min-height: 100%;
+        z-index: $zindex-dropdown;
+    }
+
+    .arrow-bottom {
+        position: absolute;
+        right: 10px;
+        top: 17px;
+        z-index: $zindex-dropdown;
+        margin: 0;
+    }
+}
+
+.multiselect-dropdown {
+    width: 100%;
+    padding: 0;
+    @include absolute(top 100% left 0);
+    background: #ffffff;
+    max-height: 200px;
+    overflow-y: scroll;
+    border: 1px solid $primary-border-color;
+    @include border-radius(3px);
+    @include transition(border 0.3s ease-in-out);
+    z-index: $zindex-popover;
+
+    &:hover {
+        border: 1px solid #9B9B9B;
+    }
+
+    label {
+        padding: 10px 10px 4px 10px;
+        margin: 0;
+        @include font-size($font-size--1);
+        border-bottom: 1px solid #ededed;
+
+        &:hover {
+            background: #f5f5f5;
+        }
+
+        input {
+            float: left;
+        }
+
+        span {
+            display: block;
+            overflow: hidden;
+            @include relative(top -2px left 0);
+        }
+    }
+}
+
+// Default Label Style
+label {
+    display: block;
+    color: $base-text-color;
+}
+
+
+/*
+    Errors
+    - add error class on filedset all fields will have 1px red color border
+    - if you want to show error message as label html should be formated as bellow:
+    
+    @example:
+        <label for="email">
+            <span class="valid-label"> Default Label Text</span>
+            <span class="error-label"> Error Label Message </span>
+        </label>
+*/
+.error-label {
+    display: none;
+}
+
+.error {
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    input[type="search"],
+    textarea {
+        border: 1px solid #CE5C5C;
+        color: #CE5C5C;
+    }
+
+    .error-label {
+        color: #CE5C5C;
+        display: block;
+    }
+
+    .valid-label {
+        display: none;
+    }
+}

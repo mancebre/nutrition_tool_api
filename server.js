@@ -145,6 +145,7 @@ router.route('/testing')
             "lamb":  17061,
             "leek":  11246,
             "lemon":  9150,
+            "lemon juiced":  9150,
             "lentils":  16069,
             "lettuce":  11252,
             "lime":  9159,
@@ -198,6 +199,7 @@ router.route('/testing')
             "suet":  80066,
             "sugar":  19335,
             "salt": 2047,
+            "sea salt": 2047,
             "sultanas":  9132,
             "sweetcorn":  11167,
             "sweet pepper":  11821,
@@ -248,7 +250,7 @@ router.route('/testing')
             if (ingredients[i] != null && ingredients[i] != undefined && ingredients[i].trim().length > 0) {
 
                 var line = {};
-                ingredients[i] = ingredients[i].replace(" or ", " ").replace(" and ", " ").replace(" of ", " ").toLowerCase().trim();
+                ingredients[i] = ingredients[i].replace(" and ", " ").replace(" of ", " ").replace(".", "").replace(",", "").toLowerCase().trim();
                 var temp = ingredients[i].split(" ");
 
                 if (temp.length >= 3) {
@@ -280,10 +282,12 @@ router.route('/testing')
                         line.measure = null;
                     }
 
+                    line.finded = false;
+
                     for (val in temp) {
                         if (ingredientsMapper[temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim()] != undefined) {
                             line.ingredient = temp[val].replace(/[^a-zA-Z0-9]/g,'').toLowerCase().trim();
-                            //finded = true;
+                            line.finded = true;
                         }
                     }
 
@@ -338,7 +342,7 @@ router.route('/testing')
 
             for (i in results) {
 
-                if (lines[i] != undefined) {
+                if (lines[i] != undefined && !lines[i].finded) {
                     lines[i].ingredient = results[i];
                 }
             }

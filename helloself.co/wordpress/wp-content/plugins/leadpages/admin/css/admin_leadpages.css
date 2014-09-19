@@ -1,0 +1,62 @@
+div.controls {
+    text-align: left !important;
+    padding: 0px !important;
+}
+.lpgs-submit-controls {
+    margin: 5px 20px 10px;
+}
+.lpgs-submit-controls button,
+.lpgs-submit-controls a {
+    margin-right: 10px;
+}
+
+input::-moz-focus-inner { border: 0; }
+object, embed { outline: 0; }
+a, button, div { outline: 0 !important; }
+a:hover, a:active, a:focus, button, div { -moz-outline-style: none;  outline: 0 !important; }
+.leadpages-help-ico {
+    height: 16px;
+    width: 16px;
+    line-height: 18px;
+    display: inline-block;
+    margin-left: 4px;
+    background: url(../img/sprites.png) no-repeat;
+    cursor: pointer;
+    text-decoration: none !important;
+}
+.leadpages-help-ico:hover {
+    background-position: 0 -16px;
+}
+.leadpages-help-ico.leadpages-check-style {
+    vertical-align: top;
+    position: relative;
+    margin-top: 6px;
+}
+.leadpages-warn-ico {
+    height: 16px;
+    width: 16px;
+    line-height: 18px;
+    display: inline-block;
+    margin-left: 4px;
+    background: url(../img/sprites.png) no-repeat;
+    cursor: pointer;
+    text-decoration: none !important;
+    background-position: -34px 0px;
+}
+.leadpages-warn-ico:hover {
+    background-position: -34px -16px;
+}
+.leadpages-warn-ico.leadpages-check-style {
+    vertical-align: top;
+    position: relative;
+    margin-top: 6px;
+}
+.btn-group {
+    display: inline-block;
+}
+.btn-group .active {
+    color: #ffffff !important;
+}
+#post-body.columns-2 #side-sortables {
+    display: none !important;
+}

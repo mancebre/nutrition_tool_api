@@ -69,7 +69,7 @@ router.get('/', function(req, res) {
 
 // test mysql
 // ----------------------------------------------------
-router.route('/testing')
+router.route('/recipecheck')
 
     .post(function(req, res) {
 

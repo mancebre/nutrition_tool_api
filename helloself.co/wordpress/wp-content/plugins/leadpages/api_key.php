@@ -1,3 +1,0 @@
-<?php
-define("PRIVATE_LEADPAGES_API_KEY", "MTBjNDFlOTEyNjM5YzU6dHVBS0xHdU5mN0Z2Zm9TUEJOTktocEY0ZkROWU9KbUQ=");
-define("PRIVATE_LEADPAGES_API_URL", "http://my.leadpages.net/api/");

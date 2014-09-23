@@ -24,7 +24,8 @@ $( "#searchForm" ).submit(function( event ) {
   // Get some values from elements on the page:
   var $form = $( this ),
     term = $("#rec").val();
-    url = 'http://104.131.17.237:8080/api/recipecheck';
+    //url = 'http://104.131.17.237:8080/api/recipecheck';
+    url = 'http://localhost:8080/api/recipecheck';
  
 jQuery.ajax(
 
@@ -44,7 +45,11 @@ success:function(data) {
   });
 },
 
-error: function() {alert(data); }
+
+error: function (xhr, ajaxOptions, thrownError) {
+  console.log(xhr.responseText);
+  console.log(thrownError);
+}
 
 }
 

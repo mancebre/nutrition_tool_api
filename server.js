@@ -75,7 +75,6 @@ router.route('/recipecheck')
 
         var ingredients = req.body.ingredients.split("\n");
         var recipeCorrection = require('./app/controllers/recipeCorrection');
-        console.log(recipeCorrection.test());
 
         var lines = recipeCorrection.populateData(ingredients);
 
@@ -88,10 +87,10 @@ router.route('/recipecheck')
             items.push(oneLine);
         }
 
-        // Async task (same in all examples in this chapter)
-        function async(arg, keywords, callback) {
+        // get foof details by keywords
+        function getFoodDetails(arg, keywords, callback) {
 
-            connection.query("SELECT * FROM `FOOD_DES` WHERE MATCH (`Long_Desc`, `Shrt_Desc`) AGAINST (?) AND `ComName` IS NULL AND `ManufacName` IS NULL;", [keywords], function(err, result)
+            connection.query("SELECT `FOOD_DES`.`Long_Desc`, `ABBREV`.* FROM `FOOD_DES` JOIN ABBREV ON `FOOD_DES`.`NDB_No` = `ABBREV`.`NDB_No` WHERE MATCH (`FOOD_DES`.`Long_Desc`, `FOOD_DES`.`Shrt_Desc`) AGAINST (?) AND `FOOD_DES`.`ComName` IS NULL AND `FOOD_DES`.`ManufacName` IS NULL LIMIT 1;", [keywords], function(err, result)
             {
                 if (err){
                     console.log(err);
@@ -99,7 +98,27 @@ router.route('/recipecheck')
                 }
                 else {
                     if (Object.keys(result).length > 0){
-                        callback(result[0].Long_Desc);
+                        callback(result[0]);
+                    } else {
+                        callback(null);
+                    }
+                }
+
+            });
+        }
+
+        // get foof measures
+        function getMeasures(arg, id, callback) {
+
+            connection.query("SELECT GROUP_CONCAT(`Msre_Desc` SEPARATOR '|#|') AS `Msre_Desc`, GROUP_CONCAT(`Gm_Wgt` SEPARATOR '|#|') AS `Gm_Wgt` FROM `WEIGHT` WHERE `NDB_No`=? AND `Amount`=1;", [id], function(err, result)
+            {
+                if (err){
+                    console.log(err);
+                    callback(err);
+                }
+                else {
+                    if (Object.keys(result).length > 0){
+                        callback(result[0]);
                     } else {
                         callback(null);
                     }
@@ -111,11 +130,16 @@ router.route('/recipecheck')
         function final() {
 
             for (i in results) {
+// console.log(lines[i].measure, results[i].measures, results[i].weight);
+                if (results[i].measures == undefined || results[i].measures.indexOf(lines[i].measure) < 0) {
+                    lines[i].measure = false;
+                }
 
-                if (lines[i] != undefined && !lines[i].finded) {
-                    lines[i].ingredient = results[i];
+                if (lines[i] != undefined) { // && !lines[i].finded
+                    lines[i].ingredient = results[i].Long_Desc;
                 }
             }
+            lines.result = recipeCorrection.recipeSum(results, lines);
             res.json(lines);
         }
 
@@ -125,9 +149,16 @@ router.route('/recipecheck')
         function series(item, keyword) {
 
             if(item) {
-                async( item, keyword, function(result) {
-                    results.push(result);
-                    return series(items.shift(), keywords.shift());
+                getFoodDetails( item, keyword, function(result) {
+                    if (!result) {
+                        return series(items.shift(), keywords.shift());
+                    }
+                    getMeasures(item, result.NDB_No, function(weightResult) {
+                        result.measures = weightResult.Msre_Desc.split("|#|");
+                        result.weight = weightResult.Gm_Wgt.split("|#|");
+                        results.push(result);
+                        return series(items.shift(), keywords.shift());
+                    })
                 });
             } else {
                 return final();

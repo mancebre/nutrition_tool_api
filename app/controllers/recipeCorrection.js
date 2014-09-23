@@ -131,16 +131,19 @@ exports.recipeSum = function (elements, ingredients) {
     var component;
 
     for (i in elements) { //summarizing all elements TODO: add calculation for OZ!!!!!!!!!!!!
-        if (elements[i].measures && elements[i].weight && elements[i].measures.indexOf(ingredients[i].measure) > -1) {
+        if (elements[i].measures && ingredients[i].amount && ingredients[i].measure && elements[i].weight && elements[i].measures.indexOf(ingredients[i].measure) > -1) {
             var ind = elements[i].measures.indexOf(ingredients[i].measure)
-            console.log(ingredients[i].measure, elements[i].weight, elements[i].measures);
-            console.log(elements[i].measures[ind], elements[i].weight[ind]);
+            // console.log(ingredients[i].measure, elements[i].weight, elements[i].measures);
+            // console.log(elements[i].measures[ind], elements[i].weight[ind], ingredients[i].amount);
+            var cm = elements[i].weight[ind] * ingredients[i].amount;
         }
-            for (component in elementNames) {
+            for (component in elementNames) {// OVO NE VALJA OBRATI PAZNJU NA MERNE JEDINICE. NAPRAVI FUNKCIJU DA KONVERTUJE SVE U GRAME
                 if (elements[i][component] > 0) {
-                    elementNames[component] += elements[i][component];
+                    var vh = ( elements[i][component] * cm ) / 100;
+                    elementNames[component] += vh;
+                    console.log(vh + ' = ', elements[i][component], cm);
                 }
-            }
+            }console.log('___________________________________');
     }
 
     return elementNames;

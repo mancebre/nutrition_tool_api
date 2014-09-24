@@ -131,8 +131,12 @@ router.route('/recipecheck')
 
             for (i in results) {
 console.log(lines[i].measure, results[i].measures, results[i].weight);
-                if (results[i].measures == undefined || results[i].measures.indexOf(lines[i].measure) < 0) {// TODO: OVO MORA DA BUDE PRECIZNIJE!!!
+                if (results[i].measures == undefined) {// TODO: OVO MORA DA BUDE PRECIZNIJE!!!
                     lines[i].measure = false;
+                }
+
+                if (results[i].measures.indexOf(lines[i].measure) < 0) {
+                    //ovde neki forEach
                 }
 
                 if (lines[i] != undefined) { // && !lines[i].finded

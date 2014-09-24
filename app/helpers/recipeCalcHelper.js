@@ -7,8 +7,8 @@ exports.convertToGram = function(unit, cm) {
 		'g': 1,
 	}
 
-	if (!unitsOfMeasure[unit] || unitsOfMeasure[unit] != undefined) {
-		var result = cm;
+	if (!unitsOfMeasure[unit] || unitsOfMeasure[unit] == undefined) {
+		var result = 0;
 	} else {
 		var result = cm / unitsOfMeasure[unit];
 	}

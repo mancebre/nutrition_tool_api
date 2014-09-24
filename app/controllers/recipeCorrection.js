@@ -127,28 +127,31 @@ exports.recipeSum = function (elements, ingredients) {
     // 'GmWt_Desc1': 0,
     'GmWt_2': 0,
     // 'GmWt_Desc2': 0,
-    'Refuse_Pct': 0
+    'Refuse_Pct': 0,
+    'Total_in_grams': 0
     };
     var component;
 
-    for (i in elements) { //summarizing all elements TODO: add calculation for OZ!!!!!!!!!!!!
+    for (i in elements) { //summarizing all elements TODO: add calculation for OZ maybe
         if (elements[i].measures && ingredients[i].amount && ingredients[i].measure && elements[i].weight && elements[i].measures.indexOf(ingredients[i].measure) > -1) {
             var ind = elements[i].measures.indexOf(ingredients[i].measure)
             // console.log(ingredients[i].measure, elements[i].weight, elements[i].measures);
             // console.log(elements[i].measures[ind], elements[i].weight[ind], ingredients[i].amount);
-            var cm = elements[i].weight[ind] * ingredients[i].amount;//console.log(cm, ingredients);
-        }
-            for (component in elementNames) {// OVO NE VALJA OBRATI PAZNJU NA MERNE JEDINICE. NAPRAVI FUNKCIJU DA KONVERTUJE SVE U GRAME
+            var cm = elements[i].weight[ind] * ingredients[i].amount;//console.log(elements[i].weight[ind], ingredients[i].amount);
+
+            for (component in elementNames) {
                 var elementSplited = component.split('_');
                 var unit = (elementSplited.length > 1) ? elementSplited[elementSplited.length - 1] : false;
-                cm = recipeCalcHelper.convertToGram(unit, cm);
                 unit = unit.replace(")", "").replace("(", "");
+                var cmG = recipeCalcHelper.convertToGram(unit, cm); // grams
                 if (elements[i][component] > 0) {
                     var vh = ( elements[i][component] * cm ) / 100;
                     elementNames[component] += vh;
-                    // console.log(vh + ' = ', elements[i][component], cm);
+                    elementNames['Total_in_grams'] += cmG; //totla is wrong!!!! :TODO FIX!!!
+                    //console.log(component, vh + ' = ', elements[i][component], cm);
                 }
             }//console.log('___________________________________');
+        }
     }
 
     return elementNames;

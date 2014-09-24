@@ -100,7 +100,7 @@ router.route('/recipecheck')
                     if (Object.keys(result).length > 0){
                         callback(result[0]);
                     } else {
-                        callback(null);
+                        callback(false);
                     }
                 }
 
@@ -117,10 +117,10 @@ router.route('/recipecheck')
                     callback(err);
                 }
                 else {
-                    if (Object.keys(result).length > 0){
+                    if (result[0].Msre_Desc && result[0].Gm_Wgt){
                         callback(result[0]);
                     } else {
-                        callback(null);
+                        callback(false);
                     }
                 }
 
@@ -130,14 +130,24 @@ router.route('/recipecheck')
         function final() {
 
             for (i in results) {
-console.log(lines[i].measure, results[i].measures, results[i].weight);
+//console.log(lines[i].measure, results[i].measures, results[i].weight);
                 if (results[i].measures == undefined) {// TODO: OVO MORA DA BUDE PRECIZNIJE!!!
                     lines[i].measure = false;
                 }
 
-                if (results[i].measures.indexOf(lines[i].measure) < 0) {
-                    //ovde neki forEach
+                if (results[i].measures != undefined && results[i].measures.indexOf(lines[i].measure) < 0) {
+                    var measuresCount = results[i].measures.length;
+                    var measuresLoop = 0;
+                    results[i].measures.forEach(function (measure) { // if neither one element of object measures does not match with input measure
+                        if (measure.indexOf(lines[i].measure) < 0) {
+                            measuresLoop++;
+                        }
+                    })
+                    if (measuresLoop == measuresCount) {
+                        lines[i].measure = false;
+                    }
                 }
+//console.log(lines[i].measure, results[i].measures, results[i].weight);
 
                 if (lines[i] != undefined) { // && !lines[i].finded
                     lines[i].ingredient = results[i].Long_Desc;
@@ -154,10 +164,13 @@ console.log(lines[i].measure, results[i].measures, results[i].weight);
 
             if(item) {
                 getFoodDetails( item, keyword, function(result) {
-                    if (!result) {
+                    if (!result || result == undefined) {
                         return series(items.shift(), keywords.shift());
                     }
                     getMeasures(item, result.NDB_No, function(weightResult) {
+                        if (!weightResult || weightResult == undefined) {
+                            return series(items.shift(), keywords.shift());
+                        }
                         result.measures = weightResult.Msre_Desc.split("|#|");
                         result.weight = weightResult.Gm_Wgt.split("|#|");
                         results.push(result);

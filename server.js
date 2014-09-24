@@ -130,8 +130,8 @@ router.route('/recipecheck')
         function final() {
 
             for (i in results) {
-// console.log(lines[i].measure, results[i].measures, results[i].weight);
-                if (results[i].measures == undefined || results[i].measures.indexOf(lines[i].measure) < 0) {
+console.log(lines[i].measure, results[i].measures, results[i].weight);
+                if (results[i].measures == undefined || results[i].measures.indexOf(lines[i].measure) < 0) {// TODO: OVO MORA DA BUDE PRECIZNIJE!!!
                     lines[i].measure = false;
                 }
 

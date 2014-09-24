@@ -74,6 +74,7 @@ exports.populateData = function(ingredients) {
 }
 
 exports.recipeSum = function (elements, ingredients) {
+    var recipeCalcHelper = require('../helpers/recipeCalcHelper');
     var i;
     var elementNames = { //keys that we gonna use from elements object
     'Water_(g)': 0,
@@ -135,15 +136,19 @@ exports.recipeSum = function (elements, ingredients) {
             var ind = elements[i].measures.indexOf(ingredients[i].measure)
             // console.log(ingredients[i].measure, elements[i].weight, elements[i].measures);
             // console.log(elements[i].measures[ind], elements[i].weight[ind], ingredients[i].amount);
-            var cm = elements[i].weight[ind] * ingredients[i].amount;
+            var cm = elements[i].weight[ind] * ingredients[i].amount;//console.log(cm, ingredients);
         }
             for (component in elementNames) {// OVO NE VALJA OBRATI PAZNJU NA MERNE JEDINICE. NAPRAVI FUNKCIJU DA KONVERTUJE SVE U GRAME
+                var elementSplited = component.split('_');
+                var unit = (elementSplited.length > 1) ? elementSplited[elementSplited.length - 1] : false;
+                cm = recipeCalcHelper.convertToGram(unit, cm);
+                unit = unit.replace(")", "").replace("(", "");
                 if (elements[i][component] > 0) {
                     var vh = ( elements[i][component] * cm ) / 100;
                     elementNames[component] += vh;
-                    console.log(vh + ' = ', elements[i][component], cm);
+                    // console.log(vh + ' = ', elements[i][component], cm);
                 }
-            }console.log('___________________________________');
+            }//console.log('___________________________________');
     }
 
     return elementNames;

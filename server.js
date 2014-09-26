@@ -87,8 +87,15 @@ router.route('/recipecheck')
             items.push(oneLine);
         }
 
-        // get foof details by keywords
+        // get food details by keywords
         function getFoodDetails(arg, keywords, callback) {
+
+            keywordsArr = keywords.split(' '); //preparing full text query boolean mode
+            keywords = '"';
+            keywordsArr.forEach(function(keyword) {
+                keywords += '+' + keyword + ' ';
+            })
+            keywords += '" IN BOOLEAN MODE';console.log("keywords", keywords);
 
             connection.query("SELECT `FOOD_DES`.`Long_Desc`, `ABBREV`.* FROM `FOOD_DES` JOIN ABBREV ON `FOOD_DES`.`NDB_No` = `ABBREV`.`NDB_No` WHERE MATCH (`FOOD_DES`.`Long_Desc`, `FOOD_DES`.`Shrt_Desc`) AGAINST (?) AND `FOOD_DES`.`ComName` IS NULL AND `FOOD_DES`.`ManufacName` IS NULL LIMIT 1;", [keywords], function(err, result)
             {
@@ -105,9 +112,9 @@ router.route('/recipecheck')
                 }
 
             });
-        }
+        }//TODO: Put these two queries into one
 
-        // get foof measures
+        // get food measures
         function getMeasures(arg, id, callback) {
 
             connection.query("SELECT GROUP_CONCAT(`Msre_Desc` SEPARATOR '|#|') AS `Msre_Desc`, GROUP_CONCAT(`Gm_Wgt` SEPARATOR '|#|') AS `Gm_Wgt` FROM `WEIGHT` WHERE `NDB_No`=? AND `Amount`=1;", [id], function(err, result)

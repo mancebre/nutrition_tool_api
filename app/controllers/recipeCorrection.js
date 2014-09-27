@@ -1,8 +1,8 @@
 
 exports.populateData = function(ingredients) {
 
-    var ingredientsMapper = require('../mappers/ingredientsMapper');
-    var measuresMapper = require('../mappers/measuresMapper');
+    //var ingredientsMapper = require('../mappers/ingredientsMapper');
+    //var measuresMapper = require('../mappers/measuresMapper');
     var lines = {};
     var i;
 
@@ -22,9 +22,9 @@ exports.populateData = function(ingredients) {
                 }
 
                 line.amount = eval(temp[0]);
-                line.measure = temp[1].trim();
-                line.measure = line.measure.replace('Tablespoons', 'tbsp').replace('tablespoons', 'tbsp').replace('Tablespoon', 'tbsp').replace('tablespoon', 'tbsp').toLowerCase().trim();
-                line.measure = line.measure.replace('pints', 'pint').replace('cups', 'cup').replace('cp', 'cup').replace('C', 'cup');
+                line.measure = temp[1].trim().toLowerCase();
+                line.measure = line.measure.replace('tablespoons', 'tbsp').replace('tablespoon', 'tbsp');
+                line.measure = line.measure.replace('pints', 'pint').replace('cups', 'cup').replace('cp', 'cup').replace('c', 'cup');
                 line.measure = line.measure.replace('teaspoon', 'tsp').replace('teaspoons', 'tsp');
 
                 line.keyword = temp.join(" ").trim();
@@ -147,7 +147,7 @@ exports.recipeSum = function (elements, ingredients) {
                 if (elements[i][component] > 0) {
                     var vh = ( elements[i][component] * cm ) / 100;
                     elementNames[component] += vh;
-                    elementNames['Total_in_grams'] += cmG; //totla is wrong!!!! :TODO FIX!!!
+                    elementNames['Total_in_grams'] += cmG; //total is wrong!!!! :TODO FIX!!!
                     //console.log(component, vh + ' = ', elements[i][component], cm);
                 }
             }//console.log('___________________________________');

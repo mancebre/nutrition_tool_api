@@ -75,29 +75,47 @@ router.route('/recipecheck')
 
         var ingredients = req.body.ingredients.split("\n");
         var recipeCorrection = require('./app/controllers/recipeCorrection');
+        var recipeCalcHelper = require('./app/helpers/recipeCalcHelper');
 
         var lines = recipeCorrection.populateData(ingredients);
 
         var oneLine;
         var keywords = [];
+        var measures = [];
         var items = [];
 
         for (oneLine in lines) {
             keywords.push(lines[oneLine].ingredient.replace(/[^a-zA-Z0-9]/g, ' ').trim());
+            measures.push(lines[oneLine].measure.replace(/[^a-zA-Z0-9]/g, ' ').trim());
             items.push(oneLine);
         }
 
         // get food details by keywords
-        function getFoodDetails(arg, keywords, callback) {
+        function getFoodDetails(arg, keywords, measures, callback) {
 
             keywordsArr = keywords.split(' '); //preparing full text query boolean mode
             keywords = '"';
             keywordsArr.forEach(function(keyword) {
-                keywords += '+' + keyword + ' ';
-            })
-            keywords += '" IN BOOLEAN MODE';console.log("keywords", keywords);
+                if (keyword.substring(keyword.length-1) == "s") {
+                    keywords += '+' + keyword + ' ' + '+' + recipeCalcHelper.removeLastChar(keyword, "s") + ' ';
+                } else {
+                    keywords += '+' + keyword + ' ';
+                }
 
-            connection.query("SELECT `FOOD_DES`.`Long_Desc`, `ABBREV`.* FROM `FOOD_DES` JOIN ABBREV ON `FOOD_DES`.`NDB_No` = `ABBREV`.`NDB_No` WHERE MATCH (`FOOD_DES`.`Long_Desc`, `FOOD_DES`.`Shrt_Desc`) AGAINST (?) AND `FOOD_DES`.`ComName` IS NULL AND `FOOD_DES`.`ManufacName` IS NULL LIMIT 1;", [keywords], function(err, result)
+            })
+            keywords += '" IN BOOLEAN MODE';
+            measures = '%' + measures + '%';
+
+            var query = "" +
+                "SELECT `FOOD_DES`.`Long_Desc`, `WEIGHT`.`Msre_Desc`, `WEIGHT`.`Amount`, `WEIGHT`.`Gm_Wgt`, `ABBREV`.* FROM `FOOD_DES` " +
+                "JOIN `ABBREV` ON `FOOD_DES`.`NDB_No` = `ABBREV`.`NDB_No` " +
+                "JOIN `WEIGHT` ON `FOOD_DES`.`NDB_No` = `WEIGHT`.`NDB_No` " +
+                    "WHERE MATCH (`FOOD_DES`.`Long_Desc`) AGAINST ("+keywords+") " +
+                    "AND `WEIGHT`.`Msre_Desc` LIKE '"+measures+"' " +
+                "LIMIT 1;";
+            console.log(query);
+            console.log('---------------');
+            connection.query(query, function(err, result)// TODO: test with all measure units in all scenarios
             {
                 if (err){
                     console.log(err);
@@ -112,48 +130,16 @@ router.route('/recipecheck')
                 }
 
             });
-        }//TODO: Put these two queries into one
-
-        // get food measures
-        function getMeasures(arg, id, callback) {
-
-            connection.query("SELECT GROUP_CONCAT(`Msre_Desc` SEPARATOR '|#|') AS `Msre_Desc`, GROUP_CONCAT(`Gm_Wgt` SEPARATOR '|#|') AS `Gm_Wgt` FROM `WEIGHT` WHERE `NDB_No`=? AND `Amount`=1;", [id], function(err, result)
-            {
-                if (err){
-                    console.log(err);
-                    callback(err);
-                }
-                else {
-                    if (result[0].Msre_Desc && result[0].Gm_Wgt){
-                        callback(result[0]);
-                    } else {
-                        callback(false);
-                    }
-                }
-
-            });
         }
+
         // Final task (same in all the examples)
         function final() {
 
             for (i in results) {
-//console.log(lines[i].measure, results[i].measures, results[i].weight);
-                if (results[i].measures == undefined) {// TODO: OVO MORA DA BUDE PRECIZNIJE!!!
-                    lines[i].measure = false;
-                }
-
-                if (results[i].measures != undefined && results[i].measures.indexOf(lines[i].measure) < 0) {
-                    var measuresCount = results[i].measures.length;
-                    var measuresLoop = 0;
-                    results[i].measures.forEach(function (measure) { // if neither one element of object measures does not match with input measure
-                        if (measure.indexOf(lines[i].measure) < 0) {
-                            measuresLoop++;
-                        }
-                    })
-                    if (measuresLoop == measuresCount) {
-                        lines[i].measure = false;
-                    }
-                }
+console.log(results[i].Long_Desc);
+//                if (results[i].measures == undefined) {
+//                    lines[i].measure = false;
+//                }
 //console.log(lines[i].measure, results[i].measures, results[i].weight);
 
                 if (lines[i] != undefined) { // && !lines[i].finded
@@ -167,28 +153,21 @@ router.route('/recipecheck')
         // A simple async series:
         var results = [];
 
-        function series(item, keyword) {
+        function series(item, keyword, measure) {
 
             if(item) {
-                getFoodDetails( item, keyword, function(result) {
+                getFoodDetails( item, keyword, measure, function(result) {
                     if (!result || result == undefined) {
-                        return series(items.shift(), keywords.shift());
+                        return series(items.shift(), keywords.shift(), measures.shift());
                     }
-                    getMeasures(item, result.NDB_No, function(weightResult) {
-                        if (!weightResult || weightResult == undefined) {
-                            return series(items.shift(), keywords.shift());
-                        }
-                        result.measures = weightResult.Msre_Desc.split("|#|");
-                        result.weight = weightResult.Gm_Wgt.split("|#|");
-                        results.push(result);
-                        return series(items.shift(), keywords.shift());
-                    })
+                    results.push(result);
+                    return series(items.shift(), keywords.shift(), measures.shift());
                 });
             } else {
                 return final();
             }
         }
-        series(items.shift(), keywords.shift());
+        series(items.shift(), keywords.shift(), measures.shift());
 
     })
 

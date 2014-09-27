@@ -94,10 +94,11 @@ router.route('/recipecheck')
         function getFoodDetails(arg, keywords, measures, callback) {
 
             keywordsArr = keywords.split(' '); //preparing full text query boolean mode
+            keywordsArr = recipeCorrection.keywordFix(keywordsArr);
             keywords = '"';
             keywordsArr.forEach(function(keyword) {
                 if (keyword.substring(keyword.length-1) == "s") {
-                    keywords += '+' + keyword + ' ' + '+' + recipeCalcHelper.removeLastChar(keyword, "s") + ' ';
+                    keywords += '+' + keyword + ' ';
                 } else {
                     keywords += '+' + keyword + ' ';
                 }
@@ -113,8 +114,7 @@ router.route('/recipecheck')
                     "WHERE MATCH (`FOOD_DES`.`Long_Desc`) AGAINST ("+keywords+") " +
                     "AND `WEIGHT`.`Msre_Desc` LIKE '"+measures+"' " +
                 "LIMIT 1;";
-            console.log(query);
-            console.log('---------------');
+
             connection.query(query, function(err, result)// TODO: test with all measure units in all scenarios
             {
                 if (err){

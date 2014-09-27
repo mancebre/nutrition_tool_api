@@ -24,8 +24,11 @@ exports.populateData = function(ingredients) {
                 line.amount = eval(temp[0]);
                 line.measure = temp[1].trim().toLowerCase();
                 line.measure = line.measure.replace('tablespoons', 'tbsp').replace('tablespoon', 'tbsp');
-                line.measure = line.measure.replace('pints', 'pint').replace('cups', 'cup').replace('cp', 'cup').replace('c', 'cup');
+                line.measure = line.measure.replace('pints', 'pint').replace('cups', 'cup').replace('cp', 'cup');
                 line.measure = line.measure.replace('teaspoon', 'tsp').replace('teaspoons', 'tsp');
+                if (line.measure.length == 1) {
+                    line.measure = line.measure.replace('c', 'cup');
+                }
 
                 line.keyword = temp.join(" ").trim();
 
@@ -155,4 +158,21 @@ exports.recipeSum = function (elements, ingredients) {
     }
 
     return elementNames;
+}
+
+exports.keywordFix = function(keywords) {
+
+    var keywordReplacement = {
+        'eggs' : 'egg',
+        'panko' : 'Bread +crumbs +dry +grated +plain'
+    };
+    var i;
+
+    for (i in keywords) {
+        if (keywordReplacement[keywords[i]] != undefined) {
+            keywords[i] = keywordReplacement[keywords[i]]
+        }
+    }
+
+    return keywords;
 }

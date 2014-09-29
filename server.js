@@ -15,7 +15,7 @@ app.use(cors());
 var port     = process.env.PORT || 8080; // set our port
 
 //get server ip
-var os = require('os')
+var os = require('os');
 
 var interfaces = os.networkInterfaces();
 var addresses = [];
@@ -114,8 +114,8 @@ router.route('/recipecheck')
                     "WHERE MATCH (`FOOD_DES`.`Long_Desc`) AGAINST ("+keywords+") " +
                     "AND `WEIGHT`.`Msre_Desc` LIKE '"+measures+"' " +
                 "LIMIT 1;";
-
-            connection.query(query, function(err, result)// TODO: test with all measure units in all scenarios
+//console.log(query);
+            connection.query(query, function(err, result)// TODO: Add ability for user to use gram as a measure
             {
                 if (err){
                     console.log(err);
@@ -136,12 +136,6 @@ router.route('/recipecheck')
         function final() {
 
             for (i in results) {
-console.log(results[i].Long_Desc);
-//                if (results[i].measures == undefined) {
-//                    lines[i].measure = false;
-//                }
-//console.log(lines[i].measure, results[i].measures, results[i].weight);
-
                 if (lines[i] != undefined) { // && !lines[i].finded
                     lines[i].ingredient = results[i].Long_Desc;
                 }
@@ -158,6 +152,8 @@ console.log(results[i].Long_Desc);
             if(item) {
                 getFoodDetails( item, keyword, measure, function(result) {
                     if (!result || result == undefined) {
+                        result = recipeCorrection.defineEmptyResult();
+                        results.push(result);
                         return series(items.shift(), keywords.shift(), measures.shift());
                     }
                     results.push(result);

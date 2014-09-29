@@ -78,7 +78,6 @@ exports.populateData = function(ingredients) {
 
 exports.recipeSum = function (elements, ingredients) {
     var recipeCalcHelper = require('../helpers/recipeCalcHelper');
-    var i;
     var elementNames = { //keys that we gonna use from elements object
     'Water_(g)': 0,
     'Energ_Kcal': 0,
@@ -133,29 +132,19 @@ exports.recipeSum = function (elements, ingredients) {
     'Refuse_Pct': 0,
     'Total_in_grams': 0
     };
-    var component;
 
-    for (i in elements) { //summarizing all elements TODO: add calculation for OZ maybe
-        if (elements[i].measures && ingredients[i].amount && ingredients[i].measure && elements[i].weight && elements[i].measures.indexOf(ingredients[i].measure) > -1) {
-            var ind = elements[i].measures.indexOf(ingredients[i].measure)
-            // console.log(ingredients[i].measure, elements[i].weight, elements[i].measures);
-            // console.log(elements[i].measures[ind], elements[i].weight[ind], ingredients[i].amount);
-            var cm = elements[i].weight[ind] * ingredients[i].amount;//console.log(elements[i].weight[ind], ingredients[i].amount);
+    elements.forEach(function(values, i) {
+        if (values.Long_Desc != null) {
+            for (var key in elementNames) {
+                elementNames[key] += (key != 'Total_in_grams') ? values[key] : 0;
+            }
 
-            for (component in elementNames) {
-                var elementSplited = component.split('_');
-                var unit = (elementSplited.length > 1) ? elementSplited[elementSplited.length - 1] : false;
-                unit = unit.replace(")", "").replace("(", "");
-                var cmG = recipeCalcHelper.convertToGram(unit, cm); // grams
-                if (elements[i][component] > 0) {
-                    var vh = ( elements[i][component] * cm ) / 100;
-                    elementNames[component] += vh;
-                    elementNames['Total_in_grams'] += cmG; //total is wrong!!!! :TODO FIX!!!
-                    //console.log(component, vh + ' = ', elements[i][component], cm);
-                }
-            }//console.log('___________________________________');
+            var weight = values.Gm_Wgt / values.Amount; // weight of one unit in grams
+
+            elementNames['Total_in_grams'] += (weight * ingredients[i].amount);
+
         }
-    }
+    })
 
     return elementNames;
 }
@@ -163,16 +152,95 @@ exports.recipeSum = function (elements, ingredients) {
 exports.keywordFix = function(keywords) {
 
     var keywordReplacement = {
-        'eggs' : 'egg',
-        'panko' : 'Bread +crumbs +dry +grated +plain'
+        'eggs':'egg',
+        'panko':'Bread +crumbs +dry +grated +plain',
+        'juiced':'juice',
+        'extra':'',
+        'virgin':'',
+        'organic':'',
+        'whisked':'',
+        'until':'',
+        'light':'',
+        'airy':'',
+        'sea':'',
+        'raw':'',
     };
     var i;
 
     for (i in keywords) {
         if (keywordReplacement[keywords[i]] != undefined) {
-            keywords[i] = keywordReplacement[keywords[i]]
+            if (keywordReplacement[keywords[i]].length > 0) {
+                keywords[i] = keywordReplacement[keywords[i]];
+            } else {
+                keywords.splice(i, 1);
+            }
         }
     }
 
     return keywords;
+}
+
+exports.defineEmptyResult = function() {
+
+    var result = {
+        'Long_Desc': null,
+        'Msre_Desc': null,
+        'Amount': null,
+        'Gm_Wgt': null,
+        'NDB_No': null,
+        'Shrt_Desc': null,
+        'Water_(g)': null,
+        'Energ_Kcal': null,
+        'Protein_(g)': null,
+        'Lipid_Tot_(g)': null,
+        'Ash_(g)': null,
+        'Carbohydrt_(g)': null,
+        'Fiber_TD_(g)': null,
+        'Sugar_Tot_(g)': null,
+        'Calcium_(mg)': null,
+        'Iron_(mg)': null,
+        'Magnesium_(mg)': null,
+        'Phosphorus_(mg)': null,
+        'Potassium_(mg)': null,
+        'Sodium_(mg)': null,
+        'Zinc_(mg)': null,
+        'Copper_mg)': null,
+        'Manganese_(mg)': null,
+        'Selenium_(µg)': null,
+        'Vit_C_(mg)': null,
+        'Thiamin_(mg)': null,
+        'Riboflavin_(mg)': null,
+        'Niacin_(mg)': null,
+        'Panto_Acid_mg)': null,
+        'Vit_B6_(mg)': null,
+        'Folate_Tot_(µg)': null,
+        'Folic_Acid_(µg)': null,
+        'Food_Folate_(µg)': null,
+        'Folate_DFE_(µg)': null,
+        'Choline_Tot_ (mg)': null,
+        'Vit_B12_(µg)': null,
+        'Vit_A_IU': null,
+        'Vit_A_RAE': null,
+        'Retinol_(µg)': null,
+        'Alpha_Carot_(µg)': null,
+        'Beta_Carot_(µg)': null,
+        'Beta_Crypt_(µg)': null,
+        'Lycopene_(µg)': null,
+        'Lut+Zea_ (µg)': null,
+        'Vit_E_(mg)': null,
+        'Vit_D_µg': null,
+        'Vit_D_IU': null,
+        'Vit_K_(µg)': null,
+        'FA_Sat_(g)': null,
+        'FA_Mono_(g)': null,
+        'FA_Poly_(g)': null,
+        'Cholestrl_(mg)': null,
+        'GmWt_1': null,
+        'GmWt_Desc1': null,
+        'GmWt_2': null,
+        'GmWt_Desc2': null,
+        'Refuse_Pct': null
+    }
+
+    return result;
 }

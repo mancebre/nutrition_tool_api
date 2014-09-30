@@ -73,9 +73,10 @@ router.route('/recipecheck')
 
     .post(function(req, res) {
 
-        var ingredients = req.body.ingredients.split("\n");
         var recipeCorrection = require('./app/controllers/recipeCorrection');
         var recipeCalcHelper = require('./app/helpers/recipeCalcHelper');
+
+        var ingredients = req.body.ingredients.split("\n").filter(function(e){return e}); // Split text by line and remove empty lines
 
         var lines = recipeCorrection.populateData(ingredients);
 
@@ -93,10 +94,14 @@ router.route('/recipecheck')
         // get food details by keywords
         function getFoodDetails(arg, keywords, measures, callback) {
 
-            keywordsArr = keywords.split(' '); //preparing full text query boolean mode
+            var measureIsGram = false;
+            var gramArr = ['g', 'grams', 'gram', 'gr'];
+
+            var keywordsArr = keywords.split(' '); //preparing full text query boolean mode
             keywordsArr = recipeCorrection.keywordFix(keywordsArr);
-            keywords = '"';
+            var keywords = "";
             keywordsArr.forEach(function(keyword) {
+
                 if (keyword.substring(keyword.length-1) == "s") {
                     keywords += '+' + keyword + ' ';
                 } else {
@@ -104,17 +109,36 @@ router.route('/recipecheck')
                 }
 
             })
-            keywords += '" IN BOOLEAN MODE';
-            measures = '%' + measures + '%';
 
-            var query = "" +
-                "SELECT `FOOD_DES`.`Long_Desc`, `WEIGHT`.`Msre_Desc`, `WEIGHT`.`Amount`, `WEIGHT`.`Gm_Wgt`, `ABBREV`.* FROM `FOOD_DES` " +
-                "JOIN `ABBREV` ON `FOOD_DES`.`NDB_No` = `ABBREV`.`NDB_No` " +
-                "JOIN `WEIGHT` ON `FOOD_DES`.`NDB_No` = `WEIGHT`.`NDB_No` " +
-                    "WHERE MATCH (`FOOD_DES`.`Long_Desc`) AGAINST ("+keywords+") " +
-                    "AND `WEIGHT`.`Msre_Desc` LIKE '"+measures+"' " +
-                "LIMIT 1;";
-//console.log(query);
+            measures = measures.toLowerCase().trim();
+
+            if (gramArr.indexOf(measures) >= 0) { // If the user has entered gram as the unit of measurement do not query table WEIGHT
+                measureIsGram = true;
+            }
+
+            measures = '%' + measures + '%';
+            keywords = connection.escape(keywords);
+            measures = connection.escape(measures);
+
+            // building of query
+            var query = "";
+            if (measureIsGram) {
+                query += "SELECT `FOOD_DES`.`Long_Desc`, `ABBREV`.* FROM `FOOD_DES` ";
+            } else {
+                query += "SELECT `FOOD_DES`.`Long_Desc`, `WEIGHT`.`Msre_Desc`, `WEIGHT`.`Amount`, `WEIGHT`.`Gm_Wgt`, `ABBREV`.* FROM `FOOD_DES` ";
+            }
+            query += "JOIN `ABBREV` ON `FOOD_DES`.`NDB_No` = `ABBREV`.`NDB_No` ";
+            if (!measureIsGram) {
+                query += "JOIN `WEIGHT` ON `FOOD_DES`.`NDB_No` = `WEIGHT`.`NDB_No` ";
+            }
+            query += "" +
+                    "WHERE MATCH (`FOOD_DES`.`Long_Desc`) AGAINST ("+keywords+" IN BOOLEAN MODE) ";
+            if (!measureIsGram) {
+                query += "AND `WEIGHT`.`Msre_Desc` LIKE "+measures+" ";
+            }
+
+            query += "LIMIT 1;";
+
             connection.query(query, function(err, result)// TODO: Add ability for user to use gram as a measure
             {
                 if (err){

@@ -133,15 +133,32 @@ exports.recipeSum = function (elements, ingredients) {
     'Total_in_grams': 0
     };
 
+    var measureIsGram;
+    var gramArr = ['g', 'grams', 'gram', 'gr'];
+    var weight;
+    var measures;
+
     elements.forEach(function(values, i) {
         if (values.Long_Desc != null) {
             for (var key in elementNames) {
                 elementNames[key] += (key != 'Total_in_grams') ? values[key] : 0;
             }
 
-            var weight = values.Gm_Wgt / values.Amount; // weight of one unit in grams
+            measures = ingredients[i].measure;
 
-            elementNames['Total_in_grams'] += (weight * ingredients[i].amount);
+            if (gramArr.indexOf(measures) >= 0) {
+                measureIsGram = true;
+            } else {
+                measureIsGram = false;
+            }
+
+            if (measureIsGram) {
+                elementNames['Total_in_grams'] += ingredients[i].amount;
+            } else {
+                weight = values.Gm_Wgt / values.Amount; // weight of one unit in grams
+                elementNames['Total_in_grams'] += (weight * ingredients[i].amount);
+            }
+
 
         }
     })

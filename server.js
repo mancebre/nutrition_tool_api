@@ -139,7 +139,7 @@ router.route('/recipecheck')
 
             query += "LIMIT 1;";
 
-            connection.query(query, function(err, result)// TODO: Add ability for user to use gram as a measure
+            connection.query(query, function(err, result)
             {
                 if (err){
                     console.log(err);

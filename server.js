@@ -2,17 +2,20 @@
 // =============================================================================
 
 // call the packages we need
-var express    = require('express');
-var bodyParser = require('body-parser');
-var app        = express();
-var cors = require('cors');
+var express     = require('express');
+var bodyParser  = require('body-parser');
+var app         = express();
+var cors        = require('cors');
+
+//get current time
+var now = new Date();
 
 // configure app
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
-var port     = process.env.PORT || 8080; // set our port
+var port        = process.env.PORT || 8080; // set our port
 
 //get server ip
 var os = require('os');
@@ -34,7 +37,7 @@ if (host != "104.131.17.237") {
 }
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://'+host+'/my_database'); // connect to mongodb
+mongoose.connect('mongodb://'+host+'/my_database'); // connect to mongodb TODO: give database some name :)
 
 var Bear = require('./app/models/bear');
 // var IngredientsMapper = require('./app/models/ingredientsMapper');
@@ -42,10 +45,10 @@ var Bear = require('./app/models/bear');
 var mysql      = require('mysql');
 var connection = mysql.createConnection({
     multipleStatements: true,
-    host     : host,
-    user     : 'root',
-    password : 'vitezkoja',
-    port : 3306, //port mysql
+    host        : host,
+    user        : 'root',
+    password    : 'vitezkoja',
+    port        : 3306, //port mysql
     database:'sr26'
 });
 
@@ -271,4 +274,4 @@ app.use('/api', router);
 // START THE SERVER
 // =============================================================================
 app.listen(port);
-console.log('Magic happens on port ' + port + '. Host is: ' + host);
+console.log('Server started at: ' + now + '. Port: ' + port);

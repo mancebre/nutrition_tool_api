@@ -107,7 +107,7 @@ router.route('/recipecheck')
             keywordsArr.forEach(function(keyword) {
 
                 if (keyword.substring(keyword.length-1) == "s") {
-                    keywords += '+' + keyword + ' ';
+                    keywords += '+' + recipeCalcHelper.removeLastChar(keyword, "s") + ' ';
                 } else {
                     keywords += '+' + keyword + ' ';
                 }

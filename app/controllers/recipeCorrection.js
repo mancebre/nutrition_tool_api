@@ -169,22 +169,21 @@ exports.recipeSum = function (elements, ingredients) {
 exports.keywordFix = function(keywords) {
 
     var keywordReplacement = {
-        'eggs':'egg',
-        'panko':'Bread +crumbs +dry +grated +plain',
-        'juiced':'juice',
-        'extra':'',
-        'virgin':'',
-        'organic':'',
-        'whisked':'',
-        'until':'',
-        'light':'',
-        'airy':'',
-        'sea':'',
-        'raw':'',
+        'eggs'      :'egg',
+        'panko'     :'Bread +crumbs +dry +grated +plain',
+        'juiced'    :'juice',
+        'extra'     :' ',
+        'virgin'    :' ',
+        'organic'   :' ',
+        'whisked'   :' ',
+        'until'     :' ',
+        'light'     :' ',
+        'airy'      :' ',
+        'sea'       :' ',
+        'raw'       :' ',
     };
-    var i;
 
-    for (i in keywords) {
+    for (var i in keywords) {
         if (keywordReplacement[keywords[i]] != undefined) {
             if (keywordReplacement[keywords[i]].length > 0) {
                 keywords[i] = keywordReplacement[keywords[i]];

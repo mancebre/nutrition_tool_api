@@ -17,6 +17,8 @@
 <script>
 // Attach a submit handler to the form
 $( "#searchForm" ).submit(function( event ) {
+
+  var host = location.host;
  
   // Stop form from submitting normally
   event.preventDefault();
@@ -25,7 +27,7 @@ $( "#searchForm" ).submit(function( event ) {
   var $form = $( this ),
     term = $("#rec").val();
     //url = 'http://104.131.17.237:8080/api/recipecheck';
-    url = 'http://localhost:8080/api/recipecheck';
+    url = 'http://'+host+':8080/api/recipecheck';
  
 jQuery.ajax(
 

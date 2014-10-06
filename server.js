@@ -49,7 +49,8 @@ var connection = mysql.createConnection({
     user        : 'root',
     password    : 'vitezkoja',
     port        : 3306, //port mysql
-    database:'sr26'
+    socketPath  : '/var/run/mysqld/mysqld.sock',
+    database    :'sr26'
 });
 
 // ROUTES FOR OUR API
@@ -145,8 +146,7 @@ router.route('/recipecheck')
             connection.query(query, function(err, result)
             {
                 if (err){
-                    console.log(err);
-                    callback(err);
+                    throw err;
                 }
                 else {
                     if (Object.keys(result).length > 0){

@@ -1,14 +1,15 @@
 // BASE SETUP
 // =============================================================================
 
+//get current time
+var now = new Date();
+
 // call the packages we need
 var express     = require('express');
 var bodyParser  = require('body-parser');
 var app         = express();
 var cors        = require('cors');
 
-//get current time
-var now = new Date();
 
 // configure app
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -62,7 +63,7 @@ var router = express.Router();
 // middleware to use for all requests
 router.use(function(req, res, next) {
 	// do logging
-	console.log('Something is happening.');
+	console.log(now + ' Something is happening.');
 	next();
 });
 
@@ -135,8 +136,7 @@ router.route('/recipecheck')
             if (!measureIsGram) {
                 query += "JOIN `WEIGHT` ON `FOOD_DES`.`NDB_No` = `WEIGHT`.`NDB_No` ";
             }
-            query += "" +
-                    "WHERE MATCH (`FOOD_DES`.`Long_Desc`) AGAINST ("+keywords+" IN BOOLEAN MODE) ";
+            query += "WHERE MATCH (`FOOD_DES`.`Long_Desc`) AGAINST ("+keywords+" IN BOOLEAN MODE) ";
             if (!measureIsGram) {
                 query += "AND `WEIGHT`.`Msre_Desc` LIKE "+measures+" ";
             }
@@ -146,7 +146,7 @@ router.route('/recipecheck')
             connection.query(query, function(err, result)
             {
                 if (err){
-                    throw err;
+                    throw now + ' ' + err;
                 }
                 else {
                     if (Object.keys(result).length > 0){

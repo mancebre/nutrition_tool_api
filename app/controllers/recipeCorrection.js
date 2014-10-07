@@ -133,16 +133,12 @@ exports.recipeSum = function (elements, ingredients) {
     'Total_in_grams': 0
     };
 
-    var measureIsGram;
+    var measureIsGram, weight, measures, ratio;
     var gramArr = ['g', 'grams', 'gram', 'gr'];
-    var weight;
-    var measures;
 
     elements.forEach(function(values, i) {
+
         if (values.Long_Desc != null) {
-            for (var key in elementNames) {
-                elementNames[key] += (key != 'Total_in_grams') ? values[key] : 0;
-            }
 
             measures = ingredients[i].measure;
 
@@ -155,10 +151,23 @@ exports.recipeSum = function (elements, ingredients) {
             if (measureIsGram) {
                 elementNames['Total_in_grams'] += ingredients[i].amount;
             } else {
-                weight = values.Gm_Wgt / values.Amount; // weight of one unit in grams
+                weight = values.Gm_Wgt / values.Amount; // weight of one unit in grams.
                 elementNames['Total_in_grams'] += (weight * ingredients[i].amount);
             }
+        }
+    })
 
+    elements.forEach(function(values) {
+
+        if (values.Long_Desc != null) {
+            
+            ratio = elementNames['Total_in_grams'] / 100; // ratio of total weight to 100 grams.
+
+            for (var key in elementNames) {
+                if (key != 'Total_in_grams') {
+                    elementNames[key] += values[key] * ratio; // Nutritional value of 100 grams multiplied by the ratio.
+                }
+            }
 
         }
     })
@@ -180,7 +189,7 @@ exports.keywordFix = function(keywords) {
         'light'     :' ',
         'airy'      :' ',
         'sea'       :' ',
-        'raw'       :' ',
+        'raw'       :' '
     };
 
     for (var i in keywords) {

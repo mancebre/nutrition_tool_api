@@ -43,16 +43,7 @@ mongoose.connect('mongodb://'+host+'/my_database'); // connect to mongodb TODO: 
 var Bear = require('./app/models/bear');
 // var IngredientsMapper = require('./app/models/ingredientsMapper');
 
-var mysql      = require('mysql');
-var connection = mysql.createConnection({
-    multipleStatements: true,
-    host        : host,
-    user        : 'root',
-    password    : 'vitezkoja',
-    port        : 3306, //port mysql
-    socketPath  : '/var/run/mysqld/mysqld.sock',
-    database    : 'sr26'
-});
+var connection = require('./app/models/sr26Model');
 
 // ROUTES FOR OUR API
 // =============================================================================
@@ -69,10 +60,32 @@ router.use(function(req, res, next) {
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
 router.get('/', function(req, res) {
-	res.json({ message: 'hooray! welcome to our api!' });	
+	res.json({ message: 'hooray! welcome to our api!' });
 });
 
-// test mysql
+// ingredient search
+// ----------------------------------------------------
+router.route('/ingredientsearch/:ingredient')
+
+    .get(function(req, res) {
+
+        var query, ingredient = req.params.ingredient;
+
+        query = "SELECT NDB_No, `Long_Desc` FROM `FOOD_DES` WHERE MATCH (`Long_Desc`) AGAINST (" + connection.escape(ingredient) + ") LIMIT 20;";
+
+        connection.query(query, function(err, result) {
+            if (err){
+                console.log(err);
+                res.json({ message: 'Ups, something has gone wrong.', error: err });
+            }
+            else {
+                res.json({ result: result });
+            }
+
+        });
+    })
+
+// recipe check
 // ----------------------------------------------------
 router.route('/recipecheck')
 

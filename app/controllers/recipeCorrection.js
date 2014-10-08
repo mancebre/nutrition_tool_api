@@ -160,7 +160,7 @@ exports.recipeSum = function (elements, ingredients) {
     elements.forEach(function(values) {
 
         if (values.Long_Desc != null) {
-            
+
             ratio = elementNames['Total_in_grams'] / 100; // ratio of total weight to 100 grams.
 
             for (var key in elementNames) {

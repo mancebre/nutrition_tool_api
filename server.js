@@ -71,7 +71,7 @@ router.route('/ingredientsearch/:ingredient')
 
         var query, ingredient = req.params.ingredient;
 
-        query = "SELECT NDB_No, `Long_Desc` FROM `FOOD_DES` WHERE MATCH (`Long_Desc`) AGAINST (" + connection.escape(ingredient) + ") LIMIT 20;";
+        query = "SELECT NDB_No, `Long_Desc` FROM `FOOD_DES` WHERE MATCH (`Long_Desc`) AGAINST (" + connection.escape(ingredient) + ") LIMIT 7;";
 
         connection.query(query, function(err, result) {
             if (err){
@@ -175,13 +175,18 @@ router.route('/recipecheck')
         // Final task (same in all the examples)
         function final() {
 
+            var result = {};
+            
             for (i in results) {
                 if (lines[i] != undefined) { // && !lines[i].finded
                     lines[i].ingredient = results[i].Long_Desc;
                 }
             }
-            lines.result = recipeCorrection.recipeSum(results, lines);
-            res.json(lines);
+
+            result.ingredients = lines;
+            result.recipeSum = recipeCorrection.recipeSum(results, lines);
+
+            res.json(result);
         }
 
         // A simple async series:

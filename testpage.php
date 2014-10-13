@@ -9,9 +9,6 @@
   <script>
   </script>
   <style>
-    .ui-autocomplete-loading {
-      background: white url("images/ui-anim_basic_16x16.gif") right center no-repeat;
-    }
     textarea { width:500px; height: 250px;}
     .red {
       background-color: red;
@@ -99,22 +96,26 @@ $( "#recipeForm" ).submit(function( event ) {
       if (status == 'success') {
         var results = '';
         $.each( data.result, function( i, val ) {
-          results += '<div style="cursor: pointer;" onClick="replace(\''+id+'\', \''+val.Long_Desc+'\');">'+val.Long_Desc+'</div>';
+          results += "<div style='cursor: pointer;' onClick='replace(\""+id+"\", \""+htmlEscape(val.Long_Desc)+"\");'>"+val.Long_Desc+"</div>";
         })
         $("#dialog #searchResult").html(results);
       }
     });
   }
 
-  function replace(id, newVal) {//TODO umesto ovoga ponovo api kalkulacija
-    $("#"+id).text(newVal);
+  function replace(id, newVal) {
+//    $("#"+id).text(newVal);
+    var idSplit = id.split("_");
+    var line = idSplit[0];
+    var text = $("#rec").val().split("\n").filter(function(e){return e});
+    console.log(text[line], $( "#dialog input[name='ingredient']" ).val(), newVal);//TODO nadji i zameni i u textarea i u tabeli i ponovi kalkulaciju
   }
 
-  function removeRow(id) {
+  function removeRow(id) {//TODO obrisi i is textarea i iz tabele i ponovi kalkulaciju
     $("#"+id).remove();
   }
 
-  function popup(element) {
+  function popup(element) {console.log(element)
     $("#dialog #searchResult").empty();
     $( "#dialog input[name='id']" ).val(element.id);
     $( "#dialog input[name='ingredient']" ).val(element.innerHTML);
@@ -124,6 +125,15 @@ $( "#recipeForm" ).submit(function( event ) {
   function openTextarea() {
     $("#recipeTextarea").show();
     $("#result").hide();
+  }
+
+  function htmlEscape(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
   }
 </script>
  <div id="dialog" title="Basic dialog" style="display: none">

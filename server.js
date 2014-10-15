@@ -63,6 +63,38 @@ router.get('/', function(req, res) {
 	res.json({ message: 'hooray! welcome to our api!' });
 });
 
+// measure search
+// ----------------------------------------------------
+router.route('/measuresearch/:number')
+
+    .get(function(req, res) {
+
+        if (req.params.number == 'all') {
+            var measuresMapper = require('./app/mappers/measuresMapper');
+            res.json({ result: measuresMapper })
+        }
+
+        var query, number = req.params.number;
+
+        query = "SELECT `Msre_Desc` FROM `WEIGHT` WHERE `NDB_No`="+connection.escape(number)+";";
+
+        connection.query(query, function(err, result) {
+            if (err){
+                console.log(err);
+                res.json({ message: 'Ups, something has gone wrong.', error: err });
+            }
+            else {
+                var resultArr = [];
+                result.forEach(function(val) {/* convert result to array */
+                    resultArr.push(val.Msre_Desc);
+                });
+
+                res.json({ result: resultArr });
+            }
+
+        });
+    })
+
 // ingredient search
 // ----------------------------------------------------
 router.route('/ingredientsearch/:ingredient')
@@ -181,6 +213,23 @@ router.route('/recipecheck')
                 if (lines[i] != undefined) { // && !lines[i].finded
                     lines[i].ingredient = results[i].Long_Desc;
                 }
+
+                if (results[i].Long_Desc == null) {
+                    lines[i].ingredientFound = 'Not Founded';
+                } else {
+                    lines[i].ingredientFound = results[i].Long_Desc;
+                }
+                if (results[i].Msre_Desc == null) {
+                    lines[i].measureFound = 'Not Founded';
+                } else {
+                    lines[i].measureFound = results[i].Msre_Desc;
+                }
+                if (isNaN(lines[i].amount)) {
+                    lines[i].amountFound = 'Not Founded';
+                } else {
+                    lines[i].amountFound = lines[i].amount;
+                }
+                lines[i].no = results[i].NDB_No;
             }
 
             result.ingredients = lines;

@@ -9,13 +9,20 @@
   <script>
   </script>
   <style>
+    .unit_select {
+      list-style: none;
+    }
+    .unit_select li:hover {
+      background-color: aqua;
+      cursor: pointer;
+    }
     .left {
       float: left;
-      margin-left: 500px;
+      margin-left: 200px;
     }
     .right {
       float: right;
-      margin-right: 500px;
+      margin-right: 200px;
     }
     textarea { width:500px; height: 250px;}
     .red {
@@ -48,6 +55,8 @@
     </tr>
   </table>
 </div>
+
+<div style="clear: both"></div>
 
 <script>
 // Attach a submit handler to the form
@@ -85,11 +94,28 @@ $( "#recipeForm" ).submit(function( event ) {
         var table = '<tr><th>Amount</th><th>Measure</th><th>Ingredient</th><th>Delete</th></tr>';
         $("#recipeTextarea").hide();
         $("#result").show();
-        $.each( data.ingredients, function( i, val ) {
+        var number;
+
+        $.each( data.ingredients, function( i, val ) {console.log(val)
+          if (val.no != null) {
+            number = 'num="' + val.no + '"';
+          } else {
+            number = '';
+          }
           table += '<tr id="'+i+'">';
           table += '<td ' + (val.amount == null ? 'class="red"' : "") + ' id="'+i+'_amount">'+val.amount+'</td> ';
-          table += '<td ' + (val.measure == null ? 'class="red"' : "") + ' id="'+i+'_measure">'+val.measure+'</td> ';
-          table += '<td ' + (val.ingredient == null ? 'class="red ingr" onClick="popup(this);" ' : 'title="'+val.ingredient+'"') + ' id="'+i+'_ingredient">'+val.keyword.replace(val.amount + ' ' + val.measure, '').trim()+'</td> ';
+          if (val.measure == null || val.ingredient == null) {
+            table += '<td '+ number +' class="red" onClick="measureDropDown(this);" id="'+i+'_measure">'+val.measure+'</td> ';
+          } else {
+            table += '<td '+ number +' onClick="measureDropDown(this);" id="'+i+'_measure">'+val.measure+'</td> ';
+          }
+//          table += '<td ' + (val.measure == null ? 'class="red" onClick="popup(this);" ' : '') + ' id="'+i+'_measure">'+val.measure+'</td> ';
+          if (val.ingredient == null) {console.log(val.amount + ' ' + val.measure)
+            table += '<td class="red ingr" onClick="popup(this)"; id="'+i+'_ingredient">'+val.keyword.replace(val.amount + ' ' + val.measure, '').trim()+'</td> ';
+          } else {
+            table += '<td title="'+val.ingredient+'" onClick="popup(this);" id="'+i+'_ingredient" title="'+val.ingredient+'" onClick="popup(this);" >'+val.ingredient.trim()+'</td> ';
+          }
+//          table += '<td ' + (val.ingredient == null ? 'class="red ingr" onClick="popup(this);" ' : 'title="'+val.ingredient+'" onClick="popup(this);" ') + ' id="'+i+'_ingredient">'+val.keyword.replace(val.amount + ' ' + val.measure, '').trim()+'</td> ';
           table += '<td class="red" onClick="removeRow('+i+');"> X</td>';
           table += '</tr>';
         });
@@ -117,6 +143,38 @@ $( "#recipeForm" ).submit(function( event ) {
     }
 
     );
+  }
+  function selectUnit(element) {
+    var selected = $(element).text();
+    $(element).closest("td").text(selected);
+    $(element).closest("td").prop('disabled', false);
+    $(element).closest("td").removeAttr("disabled");
+    $(element).closest("td").attr("onClick", "measureDropDown(this);");
+  }
+
+  function measureDropDown(element) {
+    var host = location.host;
+    var url = 'http://'+host+':8080/api/measuresearch/';
+    var number = $(element).attr("num");
+    if (number == undefined) {
+      number = 'all';
+    }
+
+    $.get(url + number,function(data,status){
+      if (status == 'success') {
+        var html = '<ul class="unit_select">';
+        $.each( data.result, function( i, val ) {
+          console.log(i, val)
+          html += '<li onclick="selectUnit(this);">'+ val +'</li>'
+        })
+        html += '</ul>';
+
+        $(element).removeAttr("onClick");
+        $(element).attr('disabled','true');
+        $(element).removeAttr("class");
+        $(element).html(html);
+      }
+    });
   }
 
   function ingredientsSearch() {
@@ -169,6 +227,7 @@ $( "#recipeForm" ).submit(function( event ) {
   }
 
   function popup(element) {// TODO we need measure corection also!!!
+    console.log(element);
     $("#dialog #searchResult").empty();
     $( "#dialog input[name='id']" ).val(element.id);
     $( "#dialog input[name='ingredient']" ).val(element.innerHTML);

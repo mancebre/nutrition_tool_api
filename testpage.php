@@ -144,12 +144,13 @@ $( "#recipeForm" ).submit(function( event ) {
 
     );
   }
-  function selectUnit(element) {
+  function selectUnit(element) {//TODO add replace function for measure
     var selected = $(element).text();
-    $(element).closest("td").text(selected);
-    $(element).closest("td").prop('disabled', false);
-    $(element).closest("td").removeAttr("disabled");
-    $(element).closest("td").attr("onClick", "measureDropDown(this);");
+    var selectedElement = $(element).closest("td");console.log(selectedElement)
+    $(selectedElement).text(selected);
+    setTimeout(function(){
+      $(selectedElement).prop('disabled', false).removeAttr("disabled").attr("onClick", "measureDropDown(this);");
+    }, 500);
   }
 
   function measureDropDown(element) {

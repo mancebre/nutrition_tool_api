@@ -72,27 +72,28 @@ router.route('/measuresearch/:number')
         if (req.params.number == 'all') {
             var measuresMapper = require('./app/mappers/measuresMapper');
             res.json({ result: measuresMapper })
+        } else {
+            var query, number = req.params.number;
+
+            query = "SELECT `Msre_Desc` FROM `WEIGHT` WHERE `NDB_No`="+connection.escape(number)+";";
+
+            connection.query(query, function(err, result) {
+                if (err){
+                    console.log(err);
+                    res.json({ message: 'Ups, something has gone wrong.', error: err });
+                }
+                else {
+                    var resultArr = [];
+                    result.forEach(function(val) {/* convert result to array */
+                        resultArr.push(val.Msre_Desc);
+                    });
+
+                    res.json({ result: resultArr });
+                }
+
+            });
         }
 
-        var query, number = req.params.number;
-
-        query = "SELECT `Msre_Desc` FROM `WEIGHT` WHERE `NDB_No`="+connection.escape(number)+";";
-
-        connection.query(query, function(err, result) {
-            if (err){
-                console.log(err);
-                res.json({ message: 'Ups, something has gone wrong.', error: err });
-            }
-            else {
-                var resultArr = [];
-                result.forEach(function(val) {/* convert result to array */
-                    resultArr.push(val.Msre_Desc);
-                });
-
-                res.json({ result: resultArr });
-            }
-
-        });
     })
 
 // ingredient search
@@ -194,7 +195,7 @@ router.route('/recipecheck')
                     throw err;
                 }
                 else {
-                    if (Object.keys(result).length > 0){
+                    if (Object.keys(result).length > 0){console.log(result[0])
                         callback(result[0]);
                     } else {
                         callback(false);

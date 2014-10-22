@@ -96,7 +96,7 @@ $( "#recipeForm" ).submit(function( event ) {
         $("#result").show();
         var number;
 
-        $.each( data.ingredients, function( i, val ) {console.log(val)
+        $.each( data.ingredients, function( i, val ) {
           if (val.no != null) {
             number = 'num="' + val.no + '"';
           } else {
@@ -104,14 +104,14 @@ $( "#recipeForm" ).submit(function( event ) {
           }
           table += '<tr id="'+i+'">';
           table += '<td ' + (val.amount == null ? 'class="red"' : "") + ' id="'+i+'_amount">'+val.amount+'</td> ';
-          if (val.measure == null || val.ingredient == null) {
+          if (val.measure == null || val.ingredient == null || val.measureFound != val.measure) {
             table += '<td '+ number +' class="red" onClick="measureDropDown(this);" id="'+i+'_measure">'+val.measure+'</td> ';
           } else {
             table += '<td '+ number +' onClick="measureDropDown(this);" id="'+i+'_measure">'+val.measure+'</td> ';
           }
 //          table += '<td ' + (val.measure == null ? 'class="red" onClick="popup(this);" ' : '') + ' id="'+i+'_measure">'+val.measure+'</td> ';
-          if (val.ingredient == null) {console.log(val.amount + ' ' + val.measure)
-            table += '<td class="red ingr" onClick="popup(this)"; id="'+i+'_ingredient">'+val.keyword.replace(val.amount + ' ' + val.measure, '').trim()+'</td> ';
+          if (val.ingredient == null) {
+            table += '<td class="red ingr" onClick="popup(this);" id="'+i+'_ingredient">'+val.keyword.replace(val.amount + ' ' + val.measure, '').trim()+'</td> ';
           } else {
             table += '<td title="'+val.ingredient+'" onClick="popup(this);" id="'+i+'_ingredient" title="'+val.ingredient+'" onClick="popup(this);" >'+val.ingredient.trim()+'</td> ';
           }
@@ -144,13 +144,17 @@ $( "#recipeForm" ).submit(function( event ) {
 
     );
   }
-  function selectUnit(element) {//TODO add replace function for measure
+  function selectUnit(element) {
     var selected = $(element).text();
-    var selectedElement = $(element).closest("td");console.log(selectedElement)
+    var selectedElement = $(element).closest("td");
+    var id = selectedElement.attr("id");
+
     $(selectedElement).text(selected);
     setTimeout(function(){
       $(selectedElement).prop('disabled', false).removeAttr("disabled").attr("onClick", "measureDropDown(this);");
     }, 500);
+
+    replaceIngr(id, selected, 'measure', false);//TODO Function that will shrink "selected" to one word
   }
 
   function measureDropDown(element) {
@@ -165,7 +169,6 @@ $( "#recipeForm" ).submit(function( event ) {
       if (status == 'success') {
         var html = '<ul class="unit_select">';
         $.each( data.result, function( i, val ) {
-          console.log(i, val)
           html += '<li onclick="selectUnit(this);">'+ val +'</li>'
         })
         html += '</ul>';
@@ -190,25 +193,42 @@ $( "#recipeForm" ).submit(function( event ) {
       if (status == 'success') {
         var results = '';
         $.each( data.result, function( i, val ) {
-          results += "<div style='cursor: pointer;' onClick='replace(\""+id+"\", \""+htmlEscape(val.Long_Desc)+"\");'>"+val.Long_Desc+"</div>";
+          results += "<div style='cursor: pointer;' onClick='replaceIngr(\""+id+"\", \""+htmlEscape(val.Long_Desc)+"\", \"ingredient\", \""+htmlEscape(val.NDB_No)+"\");'>"+val.Long_Desc+"</div>";
         })
         $("#dialog #searchResult").html(results);
       }
     });
   }
 
-  function replace(id, newVal) {
+  function replaceIngr(id, newVal, dataType, no) {
     var idSplit = id.split("_");
     var line = idSplit[0]; // line number in text area
     var text = $("#rec").val().split("\n").filter(function(e){return e}); // text from textarea
     var amount = $("#"+ line + "_amount").text();
-    var measure = $("#"+ line + "_measure").text();
 
-    text[line] = amount + ' ' + measure + ' ' + newVal;
-    text = text.join("\n");console.log(text);
+    if (dataType == 'ingredient') {
+
+      var measure = $("#"+ line + "_measure").text();
+      text[line] = amount + ' ' + measure + ' ' + newVal;
+      if (no) {
+        setTimeout(function(){
+          $("#" + line + "_measure").attr('num', String(no));
+        }, 500);
+      }
+
+    } else if (dataType == 'measure') {
+
+      var ingredient = $("#"+ line + "_ingredient").text();
+      text[line] = amount + ' ' + newVal + ' ' + ingredient;
+
+    } else {
+      return false;
+    }
+
+    $("#"+id).text(newVal);
+    text = text.join("\n");
 
     $("#rec").val(text);
-    $("#"+id).text(newVal);
 
     calculate();
 
@@ -219,7 +239,7 @@ $( "#recipeForm" ).submit(function( event ) {
     var text = $("#rec").val().split("\n").filter(function(e){return e}); // text from textarea
 
     text[line] = '';
-    text = text.join("\n");console.log(text);
+    text = text.join("\n");
 
     $("#rec").val(text);
     $("#"+id).remove();
@@ -227,8 +247,7 @@ $( "#recipeForm" ).submit(function( event ) {
     calculate();
   }
 
-  function popup(element) {// TODO we need measure corection also!!!
-    console.log(element);
+  function popup(element) {
     $("#dialog #searchResult").empty();
     $( "#dialog input[name='id']" ).val(element.id);
     $( "#dialog input[name='ingredient']" ).val(element.innerHTML);

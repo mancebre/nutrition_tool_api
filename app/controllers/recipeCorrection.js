@@ -11,7 +11,7 @@ exports.populateData = function(ingredients) {
         if (ingredients[i] != null && ingredients[i] != undefined && ingredients[i].trim().length > 0) {
 
             var line = {};
-            ingredients[i] = ingredients[i].replace(" and ", " ").replace(" of ", " ").replace(".", "").replace(",", "").toLowerCase().trim();
+
             var temp = ingredients[i].split(" ");
 
             if (temp.length >= 3) {
@@ -40,6 +40,7 @@ exports.populateData = function(ingredients) {
                     var tempIngredient = line.ingredient.split(" or ");
                     line.ingredient = tempIngredient[0];
                 }
+                line.ingredient = line.ingredient.replace(" and ", " ").replace(" of ", " ").replace(".", "").replace(",", "").toLowerCase().trim();
                 line.ingredient = line.ingredient.replace(/[^a-zA-Z0-9]/g, ' ').trim();
 
                 // if (measuresMapper.indexOf(line.measure) == -1) {

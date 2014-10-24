@@ -79,7 +79,7 @@ $( "#recipeForm" ).submit(function( event ) {
       }
       //url = 'http://104.131.17.237:8080/api/recipecheck';
       url = 'http://'+host+':8080/api/recipecheck';
-   
+
     $.ajax({
 
       url : url,
@@ -95,6 +95,7 @@ $( "#recipeForm" ).submit(function( event ) {
         $("#recipeTextarea").hide();
         $("#result").show();
         var number;
+        var gramArr = ['g', 'grams', 'gram', 'gr'];
 
         $.each( data.ingredients, function( i, val ) {
           if (val.no != null) {
@@ -104,7 +105,10 @@ $( "#recipeForm" ).submit(function( event ) {
           }
           table += '<tr id="'+i+'">';
           table += '<td ' + (val.amount == null ? 'class="red"' : "") + ' id="'+i+'_amount">'+val.amount+'</td> ';
-          if (val.measure == null || val.ingredient == null || val.measureFound != val.measure) {
+          if (gramArr.indexOf(val.measure) >= 0) {
+            table += '<td '+ number +' onClick="measureDropDown(this);" id="'+i+'_measure">'+val.measure+'</td> ';
+          }
+          else if (val.measure == null || val.ingredient == null || parseSelected(val.measureFound.toLowerCase()) != val.measure.toLowerCase()) {
             table += '<td '+ number +' class="red" onClick="measureDropDown(this);" id="'+i+'_measure">'+val.measure+'</td> ';
           } else {
             table += '<td '+ number +' onClick="measureDropDown(this);" id="'+i+'_measure">'+val.measure+'</td> ';
@@ -144,17 +148,37 @@ $( "#recipeForm" ).submit(function( event ) {
 
     );
   }
+
+  function parseSelected(selected) {
+
+//    var selects = selected.split(" ");
+//
+//    if (selects.length > 0) {
+//      return selects[0].replace(/[^\w\s]/gi, '');
+//    }
+    if (selected.indexOf("(") > -1) {
+      var result = selected.split("(");
+      selected = result[0].trim();
+    }
+
+    return selected.replace(/[^\w\s]/gi, '').replace(/ /g, "_");
+
+//    return selected;
+  }
+
   function selectUnit(element) {
     var selected = $(element).text();
     var selectedElement = $(element).closest("td");
     var id = selectedElement.attr("id");
+
+    selected = parseSelected(selected);
 
     $(selectedElement).text(selected);
     setTimeout(function(){
       $(selectedElement).prop('disabled', false).removeAttr("disabled").attr("onClick", "measureDropDown(this);");
     }, 500);
 
-    replaceIngr(id, selected, 'measure', false);//TODO Function that will shrink "selected" to one word
+    replaceIngr(id, selected, 'measure', false);
   }
 
   function measureDropDown(element) {
@@ -168,10 +192,12 @@ $( "#recipeForm" ).submit(function( event ) {
     $.get(url + number,function(data,status){
       if (status == 'success') {
         var html = '<ul class="unit_select">';
+
         $.each( data.result, function( i, val ) {
           html += '<li onclick="selectUnit(this);">'+ val +'</li>'
         })
-        html += '</ul>';
+        html += '<li onclick="selectUnit(this);">gram</li></ul>'
+
 
         $(element).removeAttr("onClick");
         $(element).attr('disabled','true');

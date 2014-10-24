@@ -152,16 +152,24 @@ router.route('/recipecheck')
             keywordsArr = recipeCorrection.keywordFix(keywordsArr);
             var keywords = "";
             keywordsArr.forEach(function(keyword) {
+                // not sure about this
+                //if (keyword.substring(keyword.length-1) == "s") {
+                //    keywords += '+' + recipeCalcHelper.removeLastChar(keyword, "s") + ' ';
+                //} else {
+                //    keywords += '+' + keyword + ' ';
+                //}
 
-                if (keyword.substring(keyword.length-1) == "s") {
-                    keywords += '+' + recipeCalcHelper.removeLastChar(keyword, "s") + ' ';
-                } else {
-                    keywords += '+' + keyword + ' ';
-                }
-
+                keywords += '+' + keyword + ' ';
             })
 
             measures = measures.toLowerCase().trim();
+            var measuresArr = measures.split(" ");
+            var subquery = '';
+
+            for (var key in measuresArr) {
+                measuresArr[key] = "%" + measuresArr[key] + "%";
+                subquery += "AND `WEIGHT`.`Msre_Desc` LIKE "+connection.escape(measuresArr[key])+" ";
+            }
 
             if (gramArr.indexOf(measures) >= 0) { // If the user has entered gram as the unit of measurement do not query table WEIGHT
                 measureIsGram = true;
@@ -169,7 +177,6 @@ router.route('/recipecheck')
 
             measures = '%' + measures + '%';
             keywords = connection.escape(keywords);
-            measures = connection.escape(measures);
 
             // building of query
             var query = "";
@@ -184,7 +191,7 @@ router.route('/recipecheck')
             }
             query += "WHERE MATCH (`FOOD_DES`.`Long_Desc`) AGAINST ("+keywords+" IN BOOLEAN MODE) ";
             if (!measureIsGram) {
-                query += "AND `WEIGHT`.`Msre_Desc` LIKE "+measures+" ";
+                query += subquery;
             }
 
             query += "LIMIT 1;";
@@ -195,7 +202,7 @@ router.route('/recipecheck')
                     throw err;
                 }
                 else {
-                    if (Object.keys(result).length > 0){console.log(result[0])
+                    if (Object.keys(result).length > 0){
                         callback(result[0]);
                     } else {
                         callback(false);
@@ -209,7 +216,7 @@ router.route('/recipecheck')
         function final() {
 
             var result = {};
-            
+
             for (i in results) {
                 if (lines[i] != undefined) { // && !lines[i].finded
                     lines[i].ingredient = results[i].Long_Desc;

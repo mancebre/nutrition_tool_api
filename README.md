@@ -24,7 +24,7 @@ https://www.digitalocean.com/community/tutorials/how-to-install-linux-apache-mys
 Next you need to do is import a sr26 database, The database is located among git files (sr26.sql).
 http://www.inmotionhosting.com/support/website/phpmyadmin/import-database-using-phpmyadmin
 
-Now that we have everything set, go to the root folder of heloself API.
+Now that we have everything set, go to the root folder of heloself API.\n
 cd /path/to/hello_self/
 And run:
 	npm install

@@ -43,7 +43,7 @@ http://www.inmotionhosting.com/support/website/phpmyadmin/import-database-using-
 
 Now that we have everything set, go to the root folder of heloself API.
 
-cd /path/to/hello_self/
+	cd /path/to/hello_self/
 
 And run:
 
@@ -55,4 +55,3 @@ this will install all necessary node modules.
 Next and final step is to run this:
 
 	node server.js
-	

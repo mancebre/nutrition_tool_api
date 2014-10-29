@@ -199,7 +199,7 @@ router.route('/recipecheck')
             connection.query(query, function(err, result)
             {
                 if (err){
-                    throw err;
+                    console.log(err);
                 }
                 else {
                     if (Object.keys(result).length > 0){

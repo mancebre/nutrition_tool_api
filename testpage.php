@@ -60,7 +60,7 @@
 
 <script>
 // Attach a submit handler to the form
-$( "#recipeForm" ).submit(function( event ) {
+$( "#recipeForm" ).submit(function( event ) {                                                                                                                                               
   // Stop form from submitting normally
   event.preventDefault();
 
@@ -113,13 +113,13 @@ $( "#recipeForm" ).submit(function( event ) {
           } else {
             table += '<td '+ number +' onClick="measureDropDown(this);" id="'+i+'_measure">'+val.measure+'</td> ';
           }
-//          table += '<td ' + (val.measure == null ? 'class="red" onClick="popup(this);" ' : '') + ' id="'+i+'_measure">'+val.measure+'</td> ';
+
           if (val.ingredient == null) {
             table += '<td class="red ingr" onClick="popup(this);" id="'+i+'_ingredient">'+val.keyword.replace(val.amount + ' ' + val.measure, '').trim()+'</td> ';
           } else {
             table += '<td title="'+val.ingredient+'" onClick="popup(this);" id="'+i+'_ingredient" title="'+val.ingredient+'" onClick="popup(this);" >'+val.ingredient.trim()+'</td> ';
           }
-//          table += '<td ' + (val.ingredient == null ? 'class="red ingr" onClick="popup(this);" ' : 'title="'+val.ingredient+'" onClick="popup(this);" ') + ' id="'+i+'_ingredient">'+val.keyword.replace(val.amount + ' ' + val.measure, '').trim()+'</td> ';
+
           table += '<td class="red" onClick="removeRow('+i+');"> X</td>';
           table += '</tr>';
         });
@@ -209,7 +209,7 @@ $( "#recipeForm" ).submit(function( event ) {
 
   function ingredientsSearch() {
     var id = $("#dialog input[name='id']").val();
-    var ingredient = $("#dialog input[name='ingredient']").val();
+    var ingredient = encodeURIComponent($("#dialog input[name='ingredient']").val());
 
     var host = location.host;
 
@@ -234,7 +234,8 @@ $( "#recipeForm" ).submit(function( event ) {
 
     if (dataType == 'ingredient') {
 
-      var measure = $("#"+ line + "_measure").text();
+      /* if measure dropdown is open get only first li */
+      var measure = $("#"+ line + "_measure").has( "ul" ).length ? $("#"+ line + "_measure ul li:first").text() : $("#"+ line + "_measure").text();
       text[line] = amount + ' ' + measure + ' ' + newVal;
       if (no) {
         setTimeout(function(){

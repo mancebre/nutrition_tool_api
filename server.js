@@ -7,14 +7,26 @@ var now = new Date();
 // call the packages we need
 var express     = require('express');
 var bodyParser  = require('body-parser');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
 var app         = express();
 var cors        = require('cors');
-
 
 // configure app
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
+app.use(cookieParser());
+//app.use(session({secret: 'keyboard cat'})); /* TODO change secret */
+
+app.use(session({
+    secret: 'cookie_secret',
+    name: 'cookie_name',
+    //store: sessionStore, // connect-mongo session store
+    proxy: true,
+    resave: true,
+    saveUninitialized: true
+}));
 
 var port        = process.env.PORT || 8080; // set our port
 
@@ -38,14 +50,16 @@ if (host != "104.131.17.237") {
 }
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://'+host+'/my_database'); // connect to mongodb TODO: give database some name :)
+mongoose.connect('mongodb://'+host+'/helloself'); // connect to mongodb
 
 var Bear = require('./app/models/bear');
+var AM = require('./app/models/account-manager');
+var EM = require('./app/models/email-dispatcher');
 // var IngredientsMapper = require('./app/models/ingredientsMapper');
 
 var connection = require('./app/models/sr26Model');
 
-// ROUTES FOR OUR API
+// ROUTES FOR OUR API TODO relocate routers to separate file
 // =============================================================================
 
 // create our router
@@ -62,6 +76,132 @@ router.use(function(req, res, next) {
 router.get('/', function(req, res) {
 	res.json({ message: 'hooray! welcome to our api!' });
 });
+
+/* authentication */
+
+/* TODO MAKE THIS RESTFUL */
+
+// creating new accounts
+// ----------------------------------------------------
+app.post('/signup', function(req, res){
+
+    var email = req.param('email');
+    var user = req.param('user');
+    var pass = req.param('pass');
+    var repass = req.param('repass');
+
+    /* Verification of the entered data */
+    if (typeof email === 'undefined' || email.trim() == '') { /* TODO add email check */
+        res.send("Email is missing or undefined", 400);
+    } else if (typeof user === 'undefined' || user.trim() == '') {
+        res.send("User is missing or undefined", 400);
+    } else if (typeof pass === 'undefined' || pass.trim() == '') {
+        res.send("Password is missing or undefined", 400);
+    } else if (typeof repass === 'undefined' || repass.trim() == '') {
+        res.send("Retype password is missing or undefined", 400);
+    } else if (pass != repass) {
+        res.send("Password is not equal with Retype password", 400);
+    } else {
+        AM.addNewAccount({
+            email 	: email,
+            user 	: user,
+            pass	: pass,
+            role    : 'user'
+        }, function(e){
+            if (e){
+                res.send(e, 400);
+            }	else{
+                res.send('ok', 200);
+            }
+        });
+    }
+
+});
+
+// password reset
+// ----------------------------------------------------
+app.post('/lost-password', function(req, res){
+    // look up the user's account via their email //
+    AM.getAccountByEmail(req.param('email'), function(o){
+        if (o){
+            res.send('ok', 200);
+            EM.dispatchResetPasswordLink(o, function(e, m){
+                // this callback takes a moment to return //
+                // should add an ajax loader to give user feedback //
+                if (!e) {
+                    //	res.send('ok', 200);
+                }	else{
+                    res.send('email-server-error', 400);
+                    for (k in e) console.log('error : ', k, e[k]);
+                }
+            });
+        }	else{
+            res.send('email-not-found', 400);
+        }
+    });
+});
+
+app.get('/reset-password', function(req, res) {
+    var email = req.query["e"];
+    var passH = req.query["p"];
+    AM.validateResetLink(email, passH, function(e){
+        if (e != 'ok'){
+            res.redirect('/');
+        } else{
+            // save the user's email in a session instead of sending to the client //
+            req.session.reset = { email:email, passHash:passH };
+            res.render('reset', { title : 'Reset Password' });
+        }
+    })
+});
+
+app.post('/reset-password', function(req, res) {
+    var nPass = req.param('pass');
+    // retrieve the user's email from the session to lookup their account and reset password //
+    var email = req.session.reset.email;
+    // destory the session immediately after retrieving the stored email //
+    req.session.destroy();
+    AM.updatePassword(email, nPass, function(e, o){
+        if (o){
+            res.send('ok', 200);
+        }	else{
+            res.send('unable to update password', 400);
+        }
+    })
+});
+
+// view & delete accounts
+// ----------------------------------------------------
+app.get('/print', function(req, res) {
+    AM.getAllRecords( function(e, accounts){
+        res.send('print', { title : 'Account List', accts : accounts });
+    })
+});
+
+app.post('/delete', function(req, res){
+    var id = req.body.id;
+
+    if (typeof id == "undefined" || id.length != 24) {
+        res.send('invalid id', 400);
+    } else {
+        AM.deleteAccount(req.body.id, function(e, obj){
+            if (!e){
+                //res.clearCookie('user');
+                //res.clearCookie('pass');
+                req.session.destroy(function(e){ res.send('ok', 200); });
+            }	else{
+                res.send('record not found', 400);
+            }
+        });
+    }
+});
+
+//app.get('/reset', function(req, res) {
+//    AM.delAllRecords(function(){
+//        res.send('ok', 200);
+//    });
+//});
+
 
 // measure search
 // ----------------------------------------------------

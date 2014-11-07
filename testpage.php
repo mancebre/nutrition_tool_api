@@ -60,7 +60,7 @@
 
 <script>
 // Attach a submit handler to the form
-$( "#recipeForm" ).submit(function( event ) {                                                                                                                                               
+$( "#recipeForm" ).submit(function( event ) {
   // Stop form from submitting normally
   event.preventDefault();
 

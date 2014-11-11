@@ -53,13 +53,13 @@ var mongoose = require('mongoose');
 mongoose.connect('mongodb://'+host+'/helloself'); // connect to mongodb
 
 var Bear = require('./app/models/bear');
-var AM = require('./app/models/account-manager');
-var EM = require('./app/models/email-dispatcher');
+var accountManager = require('./app/models/account-manager');
+var emailDispatcher = require('./app/models/email-dispatcher');
 // var IngredientsMapper = require('./app/models/ingredientsMapper');
 
 var connection = require('./app/models/sr26Model');
 
-// ROUTES FOR OUR API TODO relocate routers to separate file
+// ROUTES FOR OUR API TODO relocate routers to separate files
 // =============================================================================
 
 // create our router
@@ -79,125 +79,136 @@ router.get('/', function(req, res) {
 
 /* authentication */
 
-/* TODO MAKE THIS RESTFUL */
-
 // creating new accounts
 // ----------------------------------------------------
-app.post('/signup', function(req, res){
+router.route('/signup')
 
-    var email = req.param('email');
-    var user = req.param('user');
-    var pass = req.param('pass');
-    var repass = req.param('repass');
+    .post(function(req, res){
 
-    /* Verification of the entered data */
-    if (typeof email === 'undefined' || email.trim() == '') { /* TODO add email check */
-        res.send("Email is missing or undefined", 400);
-    } else if (typeof user === 'undefined' || user.trim() == '') {
-        res.send("User is missing or undefined", 400);
-    } else if (typeof pass === 'undefined' || pass.trim() == '') {
-        res.send("Password is missing or undefined", 400);
-    } else if (typeof repass === 'undefined' || repass.trim() == '') {
-        res.send("Retype password is missing or undefined", 400);
-    } else if (pass != repass) {
-        res.send("Password is not equal with Retype password", 400);
-    } else {
-        AM.addNewAccount({
-            email 	: email,
-            user 	: user,
-            pass	: pass,
-            role    : 'user'
-        }, function(e){
-            if (e){
-                res.send(e, 400);
-            }	else{
-                res.send('ok', 200);
-            }
-        });
-    }
+        var email = req.param('email');
+        var user = req.param('user');
+        var pass = req.param('pass');
+        var repass = req.param('repass');
 
-});
+        /* Verification of the entered data */
+        if (typeof email === 'undefined' || email.trim() == '') {
+            res.send("Email is missing or undefined", 400);
+        } else if (!accountManager.emailValidator(email)) {
+            res.send("Email format is not valid", 400);
+        } else if (typeof user === 'undefined' || user.trim() == '') {
+            res.send("User is missing or undefined", 400);
+        } else if (typeof pass === 'undefined' || pass.trim() == '') {
+            res.send("Password is missing or undefined", 400);
+        } else if (typeof repass === 'undefined' || repass.trim() == '') {
+            res.send("Retype password is missing or undefined", 400);
+        } else if (pass != repass) {
+            res.send("Password is not equal with Retype password", 400);
+        } else {
+            accountManager.addNewAccount({
+                email 	: email,
+                user 	: user,
+                pass	: pass,
+                role    : 'user'
+            }, function(e){
+                if (e){
+                    res.send(e, 400);
+                }	else{
+                    res.send('ok', 200);
+                }
+            });
+        }
+
+    })
 
 // password reset
 // ----------------------------------------------------
-app.post('/lost-password', function(req, res){
-    // look up the user's account via their email //
-    AM.getAccountByEmail(req.param('email'), function(o){
-        if (o){
-            res.send('ok', 200);
-            EM.dispatchResetPasswordLink(o, function(e, m){
-                // this callback takes a moment to return //
-                // should add an ajax loader to give user feedback //
-                if (!e) {
-                    //	res.send('ok', 200);
-                }	else{
-                    res.send('email-server-error', 400);
-                    for (k in e) console.log('error : ', k, e[k]);
-                }
-            });
-        }	else{
-            res.send('email-not-found', 400);
-        }
-    });
-});
+router.route('/lost-password')
 
-app.get('/reset-password', function(req, res) {
-    var email = req.query["e"];
-    var passH = req.query["p"];
-    AM.validateResetLink(email, passH, function(e){
-        if (e != 'ok'){
-            res.redirect('/');
-        } else{
-            // save the user's email in a session instead of sending to the client //
-            req.session.reset = { email:email, passHash:passH };
-            res.render('reset', { title : 'Reset Password' });
-        }
-    })
-});
-
-app.post('/reset-password', function(req, res) {
-    var nPass = req.param('pass');
-    // retrieve the user's email from the session to lookup their account and reset password //
-    var email = req.session.reset.email;
-    // destory the session immediately after retrieving the stored email //
-    req.session.destroy();
-    AM.updatePassword(email, nPass, function(e, o){
-        if (o){
-            res.send('ok', 200);
-        }	else{
-            res.send('unable to update password', 400);
-        }
-    })
-});
-
-// view & delete accounts
-// ----------------------------------------------------
-app.get('/print', function(req, res) {
-    AM.getAllRecords( function(e, accounts){
-        res.send('print', { title : 'Account List', accts : accounts });
-    })
-});
-
-app.post('/delete', function(req, res){
-    var id = req.body.id;
-
-    if (typeof id == "undefined" || id.length != 24) {
-        res.send('invalid id', 400);
-    } else {
-        AM.deleteAccount(req.body.id, function(e, obj){
-            if (!e){
-                //res.clearCookie('user');
-                //res.clearCookie('pass');
-                req.session.destroy(function(e){ res.send('ok', 200); });
+    .post(function(req, res){
+        // look up the user's account via their email //
+        accountManager.getAccountByEmail(req.param('email'), function(o){
+            if (o){
+                res.send('ok', 200);
+                emailDispatcher.dispatchResetPasswordLink(o, function(e, m){
+                    // this callback takes a moment to return //
+                    // should add an ajax loader to give user feedback //
+                    if (!e) {
+                        //	res.send('ok', 200);
+                    }	else{
+                        res.send('email-server-error', 400);
+                        for (k in e) console.log('error : ', k, e[k]);
+                    }
+                });
             }	else{
-                res.send('record not found', 400);
+                res.send('email-not-found', 400);
             }
         });
-    }
-});
+    })
+
+
+router.route('/reset-password')
+
+    .get(function(req, res) {
+        var email = req.query["e"];
+        var passH = req.query["p"];
+        accountManager.validateResetLink(email, passH, function(e){
+            if (e != 'ok'){
+                res.redirect('/');
+            } else{
+                // save the user's email in a session instead of sending to the client //
+                req.session.reset = { email:email, passHash:passH };
+                res.render('reset', { title : 'Reset Password' });
+            }
+        })
+    })
+
+    .post(function(req, res) {
+        var nPass = req.param('pass');
+        // retrieve the user's email from the session to lookup their account and reset password //
+        var email = req.session.reset.email;
+        // destory the session immediately after retrieving the stored email //
+        req.session.destroy();
+        accountManager.updatePassword(email, nPass, function(e, o){
+            if (o){
+                res.send('ok', 200);
+            }	else{
+                res.send('unable to update password', 400);
+            }
+        })
+    })
+
+router.route('/print')
+
+    .get(function(req, res) {
+        accountManager.getAllRecords( function(e, accounts){
+            res.send('print', { title : 'Account List', accts : accounts });
+        })
+
+    })
+
+router.route('/delete')
+
+    .post(function(req, res){
+        var id = req.body.id;
+
+        if (typeof id == "undefined" || id.length != 24) {
+            res.send('invalid id', 400);
+        } else {
+            accountManager.deleteAccount(req.body.id, function(e, obj){
+                if (!e){
+                    //res.clearCookie('user');
+                    //res.clearCookie('pass');
+                    req.session.destroy(function(e){ res.send('ok', 200); });
+                }	else{
+                    res.send('record not found', 400);
+                }
+            });
+        }
+
+    })
 
 //app.get('/reset', function(req, res) {
-//    AM.delAllRecords(function(){
+//    accountManager.delAllRecords(function(){
 //        res.send('ok', 200);
 //    });
 //});

@@ -79,9 +79,26 @@ router.get('/', function(req, res) {
 
 /* authentication */
 
+// user login
+// ----------------------------------------------------
+router.route('/account/login')
+
+    .post(function(req, res){
+        var user = req.param('user');
+        var pass = req.param('pass');
+								accountManager.manualLogin(user, pass, function(e, o){console.log(o);//TODO add tokens
+											if (!o){
+															res.send(e, 400);
+											}	else{
+															res.send(o, 200);
+											}
+								});
+    })
+	
+
 // creating new accounts
 // ----------------------------------------------------
-router.route('/signup')
+router.route('/account/signup')
 
     .post(function(req, res){
 
@@ -122,7 +139,7 @@ router.route('/signup')
 
 // password reset
 // ----------------------------------------------------
-router.route('/lost-password')
+router.route('/account/lost-password')
 
     .post(function(req, res){
         // look up the user's account via their email //
@@ -146,7 +163,7 @@ router.route('/lost-password')
     })
 
 
-router.route('/reset-password')
+router.route('/account/reset-password')
 
     .get(function(req, res) {
         var email = req.query["e"];
@@ -177,7 +194,7 @@ router.route('/reset-password')
         })
     })
 
-router.route('/print')
+router.route('/account/print')
 
     .get(function(req, res) {
         accountManager.getAllRecords( function(e, accounts){
@@ -186,7 +203,7 @@ router.route('/print')
 
     })
 
-router.route('/delete')
+router.route('/account/delete')
 
     .post(function(req, res){
         var id = req.body.id;
@@ -207,7 +224,7 @@ router.route('/delete')
 
     })
 
-//app.get('/reset', function(req, res) {
+//app.get('/account//reset', function(req, res) {
 //    accountManager.delAllRecords(function(){
 //        res.send('ok', 200);
 //    });

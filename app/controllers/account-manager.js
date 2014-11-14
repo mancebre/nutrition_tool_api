@@ -1,7 +1,7 @@
 
 var crypto 		= require('crypto');
-var MongoDB 	= require('mongodb').Db;
-var Server 		= require('mongodb').Server;
+//var MongoDB 	= require('mongodb').Db;
+//var Server 		= require('mongodb').Server;
 var moment 		= require('moment');
 
 var dbPort 		= 27017;
@@ -10,15 +10,15 @@ var dbName 		= 'helloself';
 
 /* establish the database connection */
 
-var db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
-db.open(function(e, d){
-    if (e) {
-        console.log(e);
-    }	else{
-        console.log('connected to database :: ' + dbName);
-    }
-});
-var accounts = db.collection('accounts');
+//var db = new MongoDB(dbName, new Server(dbHost, dbPort, {auto_reconnect: true}), {w: 1});
+//db.open(function(e, d){
+//    if (e) {
+//        console.log(e);
+//    }	else{
+//        console.log('connected to database :: ' + dbName);
+//    }
+//});
+var accounts = require('../models/account');
 
 /* login validation methods */
 
@@ -132,7 +132,7 @@ exports.validateResetLink = function(email, passHash, callback)
 
 exports.getAllRecords = function(callback)
 {
-    accounts.find().toArray(
+    accounts.find(
         function(e, res) {
             if (e) callback(e)
             else callback(null, res)

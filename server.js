@@ -5,12 +5,14 @@
 var now = new Date();
 
 // call the packages we need
-var express     = require('express');
-var bodyParser  = require('body-parser');
+var express     	= require('express');
+var bodyParser  	= require('body-parser');
 var cookieParser = require('cookie-parser');
-var session = require('express-session');
-var app         = express();
-var cors        = require('cors');
+var session 					= require('express-session');
+var jwt 									= require('jwt-simple');
+var app         	= express();
+var cors        	= require('cors');
+var moment 						= require('moment');
 
 // configure app
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -18,6 +20,7 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(cookieParser());
 //app.use(session({secret: 'keyboard cat'})); /* TODO change secret */
+app.set('jwtTokenSecret', 'YOUR_SECRET_STRING');/* TODO change secret */
 
 app.use(session({
     secret: 'cookie_secret',
@@ -53,7 +56,7 @@ var mongoose = require('mongoose');
 mongoose.connect('mongodb://'+host+'/helloself'); // connect to mongodb
 
 var Bear = require('./app/models/bear');
-var accountManager = require('./app/models/account-manager');
+var accountManager = require('./app/controllers/account-manager');
 var emailDispatcher = require('./app/models/email-dispatcher');
 // var IngredientsMapper = require('./app/models/ingredientsMapper');
 
@@ -64,6 +67,8 @@ var connection = require('./app/models/sr26Model');
 
 // create our router
 var router = express.Router();
+
+var jwtauth = require('./app/controllers/jwtauth.js');
 
 // middleware to use for all requests
 router.use(function(req, res, next) {
@@ -86,11 +91,29 @@ router.route('/account/login')
     .post(function(req, res){
         var user = req.param('user');
         var pass = req.param('pass');
-								accountManager.manualLogin(user, pass, function(e, o){console.log(o);//TODO add tokens
+								var userData = {};
+								accountManager.manualLogin(user, pass, function(e, o){
 											if (!o){
 															res.send(e, 400);
 											}	else{
-															res.send(o, 200);
+												    var expires = moment().add(7, 'days').valueOf();
+																var token = jwt.encode({
+																		iss: o._id,
+																		exp: expires
+																}, app.get('jwtTokenSecret'));
+												
+																/* Transferring data to a new object so we could avoid sending hashed passwords to users */
+																userData.email = o.email;
+																userData.user 	= o.user;
+																userData.role 	= o.role;
+																userData.date 	= o.date;
+																userData._id 		= o._id;
+												
+																res.json({
+																		token : token,
+																		expires: expires,
+																		user: userData
+																});
 											}
 								});
     })
@@ -141,86 +164,103 @@ router.route('/account/signup')
 // ----------------------------------------------------
 router.route('/account/lost-password')
 
-    .post(function(req, res){
-        // look up the user's account via their email //
-        accountManager.getAccountByEmail(req.param('email'), function(o){
-            if (o){
-                res.send('ok', 200);
-                emailDispatcher.dispatchResetPasswordLink(o, function(e, m){
-                    // this callback takes a moment to return //
-                    // should add an ajax loader to give user feedback //
-                    if (!e) {
-                        //	res.send('ok', 200);
-                    }	else{
-                        res.send('email-server-error', 400);
-                        for (k in e) console.log('error : ', k, e[k]);
-                    }
-                });
-            }	else{
-                res.send('email-not-found', 400);
-            }
-        });
+    .post(function(req, res, next){
+	
+								if(jwtauth(req, res, next)) {
+												// look up the user's account via their email //
+												accountManager.getAccountByEmail(req.param('email'), function(o){
+																if (o){
+																				res.send('ok', 200);
+																				emailDispatcher.dispatchResetPasswordLink(o, function(e, m){
+																								// this callback takes a moment to return //
+																								// should add an ajax loader to give user feedback //
+																								if (!e) {
+																												//	res.send('ok', 200);
+																								}	else{
+																												res.send('email-server-error', 400);
+																												for (k in e) console.log('error : ', k, e[k]);
+																								}
+																				});
+																}	else{
+																				res.send('email-not-found', 400);
+																}
+												});
+								}
     })
 
 
 router.route('/account/reset-password')
 
-    .get(function(req, res) {
-        var email = req.query["e"];
-        var passH = req.query["p"];
-        accountManager.validateResetLink(email, passH, function(e){
-            if (e != 'ok'){
-                res.redirect('/');
-            } else{
-                // save the user's email in a session instead of sending to the client //
-                req.session.reset = { email:email, passHash:passH };
-                res.render('reset', { title : 'Reset Password' });
-            }
-        })
+    .get(function(req, res, next){
+	
+								if(jwtauth(req, res, next)) {
+												var email = req.query["e"];
+												var passH = req.query["p"];
+												accountManager.validateResetLink(email, passH, function(e){
+																if (e != 'ok'){
+																				res.redirect('/');
+																} else{
+																				// save the user's email in a session instead of sending to the client //
+																				req.session.reset = { email:email, passHash:passH };
+																				res.render('reset', { title : 'Reset Password' });
+																}
+												})
+								}
     })
 
-    .post(function(req, res) {
-        var nPass = req.param('pass');
-        // retrieve the user's email from the session to lookup their account and reset password //
-        var email = req.session.reset.email;
-        // destory the session immediately after retrieving the stored email //
-        req.session.destroy();
-        accountManager.updatePassword(email, nPass, function(e, o){
-            if (o){
-                res.send('ok', 200);
-            }	else{
-                res.send('unable to update password', 400);
-            }
-        })
+    .post(function(req, res, next){
+	
+								
+								if(jwtauth(req, res, next)) {
+												var nPass = req.param('pass');
+												// retrieve the user's email from the session to lookup their account and reset password //
+												var email = req.session.reset.email;
+												// destory the session immediately after retrieving the stored email //
+												req.session.destroy();
+												accountManager.updatePassword(email, nPass, function(e, o){
+																if (o){
+																				res.send('ok', 200);
+																}	else{
+																				res.send('unable to update password', 400);
+																}
+												})
+								}
     })
 
-router.route('/account/print')
+router.route('/account/print') 
 
-    .get(function(req, res) {
-        accountManager.getAllRecords( function(e, accounts){
-            res.send('print', { title : 'Account List', accts : accounts });
-        })
+    .get(function(req, res, next){
+	
+								if(jwtauth(req, res, next)) {
+													accountManager.getAllRecords( function(e, accounts){
+																	res.send({ accts : accounts });
+													})
+								}
 
     })
 
 router.route('/account/delete')
 
-    .post(function(req, res){
-        var id = req.body.id;
+    .post(function(req, res, next){
+	
+								
+								if(jwtauth(req, res, next)) {
+												var id = req.body.id;
 
-        if (typeof id == "undefined" || id.length != 24) {
-            res.send('invalid id', 400);
-        } else {
-            accountManager.deleteAccount(req.body.id, function(e, obj){
-                if (!e){
-                    //res.clearCookie('user');
-                    //res.clearCookie('pass');
-                    req.session.destroy(function(e){ res.send('ok', 200); });
-                }	else{
-                    res.send('record not found', 400);
-                }
-            });
-        }
+												if (typeof id == "undefined" || id.length != 24) {
+																res.send('invalid id', 400);
+												} else {
+																accountManager.deleteAccount(req.body.id, function(e, obj){
+																				if (!e){
+																								//res.clearCookie('user');
+																								//res.clearCookie('pass');
+																								req.session.destroy(function(e){ res.send('ok', 200); });
+																				}	else{
+																								res.send('record not found', 400);
+																				}
+																});
+												}
+								}
 
     })
 

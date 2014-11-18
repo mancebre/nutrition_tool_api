@@ -2,6 +2,10 @@ var Account = require('../models/account');
 var jwt = require('jwt-simple');
  
 module.exports = function(req, res, next) {
+	
+	function validate(id) {
+		
+	}
   var token = (req.body && req.body.access_token) || (req.query && req.query.access_token) || req.headers['x-access-token'];
 //		var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NDYxZTY1ZDdkYjZhOTBjMWYwMDAwMDEiLCJleHAiOjE0MTU5OTU3MDA4NTF9.VWXp-Od-DP5YAZlmkFm3e0hpfrY3YFjcEqkOVHSD95w';
 	
@@ -15,17 +19,18 @@ module.exports = function(req, res, next) {
 							} else {
 											Account.findOne({ _id: decoded.iss }, function(err, user) {
 													req.user = user;
+													return true;
 											});
-													
-											return true;
 							}
+						/* User authentication should be added somewhere */
+							return true;
 
 					} catch (err) {
 									console.log(err)
 									return next();
 					}
 		} else {
-					next();
-					return true;
+					res.end('Access token is missing', 500);
+					return false;
 		}
 };

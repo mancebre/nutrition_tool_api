@@ -66,7 +66,7 @@ exports.addNewAccount = function(newData, callback)
                         newData.pass = hash;
                         // append date stamp when record was created //
                         newData.date = moment().format('MMMM Do YYYY, h:mm:ss a');
-                        accounts.insert(newData, {safe: true}, callback);
+                        accounts.create(newData, callback);
                     });
                 }
             });
@@ -79,16 +79,15 @@ exports.updateAccount = function(newData, callback)
     accounts.findOne({user:newData.user}, function(e, o){
         o.name 		= newData.name;
         o.email 	= newData.email;
-        o.country 	= newData.country;
         if (newData.pass == ''){
-            accounts.save(o, {safe: true}, function(err) {
+            accounts.save(o, function(err) {
                 if (err) callback(err);
                 else callback(null, o);
             });
         }	else{
             saltAndHash(newData.pass, function(hash){
                 o.pass = hash;
-                accounts.save(o, {safe: true}, function(err) {
+                accounts.save(o, function(err) {
                     if (err) callback(err);
                     else callback(null, o);
                 });
@@ -105,7 +104,7 @@ exports.updatePassword = function(email, newPass, callback)
         }	else{
             saltAndHash(newPass, function(hash){
                 o.pass = hash;
-                accounts.save(o, {safe: true}, callback);
+                accounts.save(o, callback);
             });
         }
     });

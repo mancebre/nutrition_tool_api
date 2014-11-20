@@ -30,7 +30,18 @@ module.exports = function(app) {
 			router.get('/', function(req, res) {
 				res.json({ message: 'hooray! welcome to our api!' });
 			});
+	
+			/* session test*/
 
+			router.route('/session')
+
+							.post(function(req, res){
+				
+											res.json({user: req.user});
+											console.log(req.user)
+							})
+			
+			
 			/* authentication */
 
 			// user login
@@ -41,6 +52,7 @@ module.exports = function(app) {
 											var user = req.param('user');
 											var pass = req.param('pass');
 											var userData = {};
+											var userSession = [];
 											accountManager.manualLogin(user, pass, function(e, o){
 														if (!o){
 																		res.send(e, 400);
@@ -173,7 +185,8 @@ module.exports = function(app) {
 											if(jwtauth(req, res, next)) {
 																accountManager.getAllRecords( function(e, accounts){
 																				res.send({ accts : accounts });
-																})
+																}); 
+																
 											}
 							})
 

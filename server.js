@@ -5,12 +5,12 @@
 var now = new Date();
 
 // call the packages we need
-var express     	= require('express');
-var bodyParser  	= require('body-parser');
-var cookieParser = require('cookie-parser');
-var session 					= require('express-session');
+var express         = require('express');
+var bodyParser      = require('body-parser');
+var cookieParser    = require('cookie-parser');
+var session         = require('express-session');
 var app         	= express();
-var cors        	= require('cors');
+var cors            = require('cors');
 
 // configure app
 app.use(bodyParser.urlencoded({ extended: true }));

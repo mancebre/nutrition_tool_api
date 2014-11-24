@@ -116,7 +116,6 @@ var ingredientsMapper = {
     "sour cream":  1056,
     "spaghetti":  20093,
     "spam":  7276,
-    "squash":  11477,
     "suet":  80066,
     "sugar":  19335,
     "salt": 2047,

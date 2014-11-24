@@ -31,16 +31,6 @@ module.exports = function(app) {
         res.json({ message: 'hooray! welcome to our api!' });
     });
 
-    /* session test*/
-
-    router.route('/session')
-
-        .post(function(req, res){
-
-            res.json({user: req.user});
-            console.log(req.user)
-        })
-
 
     /* authentication */
 
@@ -76,7 +66,7 @@ module.exports = function(app) {
                     });
                 }
             });
-        })
+        });
 
 
     // creating new accounts
@@ -118,7 +108,7 @@ module.exports = function(app) {
                 });
             }
 
-        })
+        });
 
     // password reset
     // ----------------------------------------------------
@@ -137,14 +127,14 @@ module.exports = function(app) {
                             res.send('ok', 200);
                         } else{
                             res.send('email-server-error', 400);
-                            for (k in e) console.log('error : ', k, e[k]);
+                            for (var k in e) console.log('error : ', k, e[k]);
                         }
                     });
                 } else{
                     res.send('email-not-found', 400);
                 }
             });
-        })
+        });
 
 
     router.route('/account/reset-password')
@@ -159,7 +149,7 @@ module.exports = function(app) {
                 } else{
                     res.send('ok', 200); /* After this response you can redirect user to password reset page (on app side) */
                 }
-            })
+            });
         })
 
         .post(function(req, res, next){
@@ -173,9 +163,9 @@ module.exports = function(app) {
                     } else{
                         res.send('unable to update password', 400);
                     }
-                })
+                });
             }
-        })
+        });
 
     router.route('/account/print')
 
@@ -184,10 +174,10 @@ module.exports = function(app) {
             if(jwtauth(req, res, next)) {
                 accountManager.getAllRecords( function(e, accounts){
                     res.send({ accts : accounts });
-                }); 
+                });
 
             }
-        })
+        });
 
     router.route('/account/delete')
 
@@ -212,7 +202,7 @@ module.exports = function(app) {
                 }
             }
 
-        })
+        });
 
     //app.get('/account//reset', function(req, res) {
     //    accountManager.delAllRecords(function(){
@@ -228,8 +218,8 @@ module.exports = function(app) {
         .get(function(req, res) {
 
             if (req.params.number == 'all') {
-                var measuresMapper = require('./app/mappers/measuresMapper');
-                res.json({ result: measuresMapper })
+                var measuresMapper = require('./mappers/measuresMapper');
+                res.json({ result: measuresMapper });
             } else {
                 var query, number = req.params.number;
 
@@ -252,7 +242,7 @@ module.exports = function(app) {
                 });
             }
 
-        })
+        });
 
     // ingredient search
     // ----------------------------------------------------
@@ -274,7 +264,7 @@ module.exports = function(app) {
                 }
 
             });
-        })
+        });
 
     // recipe check
     // ----------------------------------------------------
@@ -282,10 +272,10 @@ module.exports = function(app) {
 
         .post(function(req, res) {
 
-            var recipeCorrection = require('./app/controllers/recipeCorrection');
-            var recipeCalcHelper = require('./app/helpers/recipeCalcHelper');
+            var recipeCorrection = require('./controllers/recipeCorrection');
+            var recipeCalcHelper = require('./helpers/recipeCalcHelper');
 
-            var ingredients = req.body.ingredients.split("\n").filter(function(e){return e}); // Split text by line and remove empty lines
+            var ingredients = req.body.ingredients.split("\n").filter(function(e){return e;}); // Split text by line and remove empty lines
 
             var lines = recipeCorrection.populateData(ingredients);
 
@@ -308,7 +298,7 @@ module.exports = function(app) {
 
                 var keywordsArr = keywords.split(' '); //preparing full text query boolean mode
                 keywordsArr = recipeCorrection.keywordFix(keywordsArr);
-                var keywords = "";
+                keywords = "";
                 keywordsArr.forEach(function(keyword) {
                     // not sure about this
                     //if (keyword.substring(keyword.length-1) == "s") {
@@ -318,7 +308,7 @@ module.exports = function(app) {
                     //}
 
                     keywords += '+' + keyword + ' ';
-                })
+                });
 
                 measures = measures.toLowerCase().trim();
                 var measuresArr = measures.split(" ");
@@ -375,7 +365,7 @@ module.exports = function(app) {
 
                 var result = {};
 
-                for (i in results) {
+                for (var i in results) {
                     if (lines[i] != undefined) { // && !lines[i].finded
                         lines[i].ingredient = results[i].Long_Desc;
                     }
@@ -425,7 +415,7 @@ module.exports = function(app) {
             }
             series(items.shift(), keywords.shift(), measures.shift());
 
-        })
+        });
 
     // on routes that end in /bears
     // ----------------------------------------------------

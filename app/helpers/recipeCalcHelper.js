@@ -5,16 +5,18 @@ exports.convertToGram = function(unit, cm) {
 		'mg': 1000,
 		'oz': 0.0352739619,
 		'g': 1
-	}
+	};
 
-	if (!unitsOfMeasure[unit] || unitsOfMeasure[unit] == undefined) {
-		var result = 0;
+	var result = false;
+
+	if (!unitsOfMeasure[unit] || typeof unitsOfMeasure[unit] === undefined) {
+		result = 0;
 	} else {
-		var result = cm / unitsOfMeasure[unit];
+		result = cm / unitsOfMeasure[unit];
 	}
 
 	return result;
-}
+};
 
 exports.removeLastChar = function(url, char) { // removes last character from url if is equal to char
     if (url.substring(url.length-1) == char) {
@@ -22,4 +24,4 @@ exports.removeLastChar = function(url, char) { // removes last character from ur
     }
 
     return url;
-}
+};

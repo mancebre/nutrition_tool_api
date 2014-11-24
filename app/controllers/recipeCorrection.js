@@ -75,7 +75,7 @@ exports.populateData = function(ingredients) {
     }
 
     return lines;
-}
+};
 
 exports.recipeSum = function (elements, ingredients) {
     var recipeCalcHelper = require('../helpers/recipeCalcHelper');
@@ -156,7 +156,7 @@ exports.recipeSum = function (elements, ingredients) {
                 elementNames['Total_in_grams'] += (weight * ingredients[i].amount);
             }
         }
-    })
+    });
 
     elements.forEach(function(values) {
 
@@ -171,10 +171,10 @@ exports.recipeSum = function (elements, ingredients) {
             }
 
         }
-    })
+    });
 
     return elementNames;
-}
+};
 
 exports.keywordFix = function(keywords) {
 
@@ -204,7 +204,7 @@ exports.keywordFix = function(keywords) {
     }
 
     return keywords;
-}
+};
 
 exports.defineEmptyResult = function() {
 
@@ -266,7 +266,7 @@ exports.defineEmptyResult = function() {
         'GmWt_2': null,
         'GmWt_Desc2': null,
         'Refuse_Pct': null
-    }
+    };
 
     return result;
-}
+};

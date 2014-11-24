@@ -14,6 +14,7 @@ var router = express.Router();
 var jwtauth = require('./controllers/jwtauth.js');
 
 var Bear = require('./models/bear');
+var Recipe = require('./models/recipe');
 var accountManager = require('./controllers/account-manager');
 var emailDispatcher = require('./models/email-dispatcher');
 
@@ -26,10 +27,137 @@ module.exports = function(app) {
         next();
     });
 
-    // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
+    // test route to make sure everything is working (accessed at GET http://localhost:8080/)
     router.get('/', function(req, res) {
         res.json({ message: 'hooray! welcome to our api!' });
     });
+
+    /* Recipe Dashboard */
+    router.route('/recipe')
+
+        // Add new recipe
+        // ----------------------------------------------------
+        .post(function(req, res){
+            var recipe = new Recipe();
+            recipe.user_id = req.param('user_id');
+            recipe.name = req.param('name');
+            recipe.servings = req.param('servings');
+            recipe.ingredients = req.param('ingredients');
+            recipe.directions = req.param('directions');
+            recipe.category = req.param('category');
+
+            /* Verification of the entered data */
+            if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
+                res.send("Name is missing or undefined", 400);
+            } else if (typeof recipe.user_id === 'undefined' || recipe.user_id.trim() === '') {
+                res.send('User id is missing or undefined', 400);
+            } else if (typeof recipe.servings === 'undefined' || recipe.servings < 0) {
+                res.send('"Number of Servings" is missing or undefined and must be greater than zero', 400);
+            } else if (isNaN(recipe.servings)) {
+                res.send('"Number of Servings" must be number', 400);
+            } else if (typeof recipe.ingredients === 'undefined' || recipe.ingredients.trim() === '') {
+                res.send('Ingredients is missing or undefined', 400);
+            } else if (typeof recipe.directions === 'undefined' || recipe.directions.trim() === '') {
+                res.send('Directions is missing or undefined', 400);
+            } else if (typeof recipe.category === 'undefined' || recipe.category.trim() === '') {
+                res.send('Category is missing or undefined', 400);
+            } else {
+                recipe.save(function(err) {
+                    if (err) {
+                        res.send(err);
+                    }
+
+                    res.json({ message: 'Recipe saved!' });
+                });
+            }
+
+        })
+
+        // Get all recipes
+        // ----------------------------------------------------
+        .get(function(req, res){ /* TODO This should be filtered by current user (get user id from TOKEN) */
+            Recipe.find(function(err, recipes) {
+                    if (err) {
+                        res.send(err);
+                    }
+
+                    res.json(recipes);
+            });
+        });
+
+    // on routes that end in /bears/:bear_id
+    // ----------------------------------------------------
+    router.route('/recipe/:recipe_id')
+
+        // get recipe by id
+        .get(function(req, res) {
+            Recipe.findById(req.params.recipe_id, function(err, recipe) {
+                if (err){
+                    res.send(err);
+                }
+
+                if (recipe) {
+                    res.json({recipe: recipe});
+                } else {
+                    res.json({message:"Requested recipe does not exist."});
+                }
+            });
+        })
+
+        // update recipe with this id
+        .put(function(req, res) {
+            Recipe.findById(req.params.recipe_id, function(err, recipe) {
+
+                if (err) {
+                    res.send(err);
+                }
+
+                recipe.user_id = req.param('user_id');
+                recipe.name = req.param('name');
+                recipe.servings = req.param('servings');
+                recipe.ingredients = req.param('ingredients');
+                recipe.directions = req.param('directions');
+                recipe.category = req.param('category');
+
+                /* Verification of the entered data */
+                if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
+                    res.send("Name is missing or undefined", 400);
+                } else if (typeof recipe.user_id === 'undefined' || recipe.user_id.trim() === '') {
+                    res.send('User id is missing or undefined', 400);
+                } else if (typeof recipe.servings === 'undefined' || recipe.servings < 0) {
+                    res.send('"Number of Servings" is missing or undefined and must be greater than zero', 400);
+                } else if (isNaN(recipe.servings)) {
+                    res.send('"Number of Servings" must be number', 400);
+                } else if (typeof recipe.ingredients === 'undefined' || recipe.ingredients.trim() === '') {
+                    res.send('Ingredients is missing or undefined', 400);
+                } else if (typeof recipe.directions === 'undefined' || recipe.directions.trim() === '') {
+                    res.send('Directions is missing or undefined', 400);
+                } else if (typeof recipe.category === 'undefined' || recipe.category.trim() === '') {
+                    res.send('Category is missing or undefined', 400);
+                } else {
+                    recipe.save(function(err) {
+                        if (err) {
+                            res.send(err);
+                        }
+
+                        res.json({ message: 'Recipe updated!' });
+                    });
+                }
+
+            });
+        })
+
+        // delete the recipe with this id
+        .delete(function(req, res) {
+                Recipe.remove({
+                        _id: req.params.recipe_id
+                }, function(err, recipe) {
+                        if (err)
+                                res.send(err);
+
+                        res.json({ message: 'Successfully deleted' });
+                });
+        });
 
 
     /* authentication */
@@ -492,6 +620,6 @@ module.exports = function(app) {
 
 
     // REGISTER OUR ROUTES -------------------------------
-    app.use('/api', router);
+    app.use('/', router);
 
 };

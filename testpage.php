@@ -77,8 +77,8 @@ $( "#recipeForm" ).submit(function( event ) {
       if (term.length < 1) {
         return false;
       }
-      //url = 'http://104.131.17.237:8080/api/recipecheck';
-      url = 'http://'+host+':8080/api/recipecheck';
+      //url = 'http://104.131.17.237:8080/recipecheck';
+      url = 'http://'+host+':8080/recipecheck';
 
     $.ajax({
 
@@ -183,7 +183,7 @@ $( "#recipeForm" ).submit(function( event ) {
 
   function measureDropDown(element) {
     var host = location.host;
-    var url = 'http://'+host+':8080/api/measuresearch/';
+    var url = 'http://'+host+':8080/measuresearch/';
     var number = $(element).attr("num");
     if (number == undefined) {
       number = 'all';
@@ -213,7 +213,7 @@ $( "#recipeForm" ).submit(function( event ) {
 
     var host = location.host;
 
-    var url = 'http://'+host+':8080/api/ingredientsearch/';
+    var url = 'http://'+host+':8080/ingredientsearch/';
 
     $.get(url + ingredient,function(data,status){
       if (status == 'success') {

@@ -21,6 +21,7 @@ module.exports = function(req, res, next) {
 						return res.send('User does not exist', 500);
 					} else {
 						req.user = user;
+						return true;
 					}
 
 				});

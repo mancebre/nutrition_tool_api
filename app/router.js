@@ -20,6 +20,21 @@ var emailDispatcher = require('./models/email-dispatcher');
 
 module.exports = function(app) {
 
+    function getUserId(req, res) {
+        var token = (req.body && req.body.access_token) || (req.query && req.query.access_token) || req.headers['x-access-token'];
+        var decoded = jwt.decode(token, req.app.get('jwtTokenSecret'));
+
+        if(!decoded.iss || typeof decoded.iss === undefined ) {
+            console.log("Missing user id!!!");
+        }
+
+        if(!token) {
+            console.log("Missing access token!!!");
+        }
+
+        return decoded.iss;
+    }
+
     // middleware to use for all requests
     router.use(function(req, res, next) {
         // do logging
@@ -37,82 +52,11 @@ module.exports = function(app) {
 
         // Add new recipe
         // ----------------------------------------------------
-        .post(function(req, res){
-            var recipe = new Recipe();
-            recipe.user_id = req.param('user_id');
-            recipe.name = req.param('name');
-            recipe.servings = req.param('servings');
-            recipe.ingredients = req.param('ingredients');
-            recipe.directions = req.param('directions');
-            recipe.category = req.param('category');
-
-            /* Verification of the entered data */
-            if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
-                res.send("Name is missing or undefined", 400);
-            } else if (typeof recipe.user_id === 'undefined' || recipe.user_id.trim() === '') {
-                res.send('User id is missing or undefined', 400);
-            } else if (typeof recipe.servings === 'undefined' || recipe.servings < 0) {
-                res.send('"Number of Servings" is missing or undefined and must be greater than zero', 400);
-            } else if (isNaN(recipe.servings)) {
-                res.send('"Number of Servings" must be number', 400);
-            } else if (typeof recipe.ingredients === 'undefined' || recipe.ingredients.trim() === '') {
-                res.send('Ingredients is missing or undefined', 400);
-            } else if (typeof recipe.directions === 'undefined' || recipe.directions.trim() === '') {
-                res.send('Directions is missing or undefined', 400);
-            } else if (typeof recipe.category === 'undefined' || recipe.category.trim() === '') {
-                res.send('Category is missing or undefined', 400);
-            } else {
-                recipe.save(function(err) {
-                    if (err) {
-                        res.send(err);
-                    }
-
-                    res.json({ message: 'Recipe saved!' });
-                });
-            }
-
-        })
-
-        // Get all recipes
-        // ----------------------------------------------------
-        .get(function(req, res){ /* TODO This should be filtered by current user (get user id from TOKEN) */
-            Recipe.find(function(err, recipes) {
-                    if (err) {
-                        res.send(err);
-                    }
-
-                    res.json(recipes);
-            });
-        });
-
-    // on routes that end in /bears/:bear_id
-    // ----------------------------------------------------
-    router.route('/recipe/:recipe_id')
-
-        // get recipe by id
-        .get(function(req, res) {
-            Recipe.findById(req.params.recipe_id, function(err, recipe) {
-                if (err){
-                    res.send(err);
-                }
-
-                if (recipe) {
-                    res.json({recipe: recipe});
-                } else {
-                    res.json({message:"Requested recipe does not exist."});
-                }
-            });
-        })
-
-        // update recipe with this id
-        .put(function(req, res) {
-            Recipe.findById(req.params.recipe_id, function(err, recipe) {
-
-                if (err) {
-                    res.send(err);
-                }
-
-                recipe.user_id = req.param('user_id');
+        .post(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                var recipe = new Recipe();
+                recipe.user_id = userId;
                 recipe.name = req.param('name');
                 recipe.servings = req.param('servings');
                 recipe.ingredients = req.param('ingredients');
@@ -122,8 +66,6 @@ module.exports = function(app) {
                 /* Verification of the entered data */
                 if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
                     res.send("Name is missing or undefined", 400);
-                } else if (typeof recipe.user_id === 'undefined' || recipe.user_id.trim() === '') {
-                    res.send('User id is missing or undefined', 400);
                 } else if (typeof recipe.servings === 'undefined' || recipe.servings < 0) {
                     res.send('"Number of Servings" is missing or undefined and must be greater than zero', 400);
                 } else if (isNaN(recipe.servings)) {
@@ -140,24 +82,109 @@ module.exports = function(app) {
                             res.send(err);
                         }
 
-                        res.json({ message: 'Recipe updated!' });
+                        res.json({ message: 'Recipe saved!' });
                     });
                 }
+            }
 
-            });
+        })
+
+        // Get all recipes
+        // ----------------------------------------------------
+        .get(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                Recipe.find({user_id:userId}, function(err, recipes) {
+                    if (err) {
+                        res.send(err);
+                    }
+
+                    res.json(recipes);
+                });
+            }
+        });
+
+    // on routes that end in /bears/:bear_id
+    // ----------------------------------------------------
+    router.route('/recipe/:recipe_id')
+
+        // get recipe by id
+        .get(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                Recipe.find({$and:[{user_id:userId}, {_id:req.params.recipe_id}]}, function(err, recipe) {
+                    if (err){
+                        res.send(err);
+                    }
+
+                    if (recipe) {
+                        res.json({recipe: recipe});
+                    } else {
+                        res.json({message:"Requested recipe does not exist."});
+                    }
+                });
+            }
+        })
+
+        // update recipe with this id
+        .put(function(req, res, next) {
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                Recipe.findOne({$and:[{user_id:userId}, {_id:req.params.recipe_id}]}, function(err, recipe) {
+
+                    if (err) {
+                        res.send(err);
+                    }
+
+                    recipe.user_id = userId;
+                    recipe.name = req.param('name');
+                    recipe.servings = req.param('servings');
+                    recipe.ingredients = req.param('ingredients');
+                    recipe.directions = req.param('directions');
+                    recipe.category = req.param('category');
+
+                    /* Verification of the entered data */
+                    if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
+                        res.send("Name is missing or undefined", 400);
+                    } else if (typeof recipe.servings === 'undefined' || recipe.servings < 0) {
+                        res.send('"Number of Servings" is missing or undefined and must be greater than zero', 400);
+                    } else if (isNaN(recipe.servings)) {
+                        res.send('"Number of Servings" must be number', 400);
+                    } else if (typeof recipe.ingredients === 'undefined' || recipe.ingredients.trim() === '') {
+                        res.send('Ingredients is missing or undefined', 400);
+                    } else if (typeof recipe.directions === 'undefined' || recipe.directions.trim() === '') {
+                        res.send('Directions is missing or undefined', 400);
+                    } else if (typeof recipe.category === 'undefined' || recipe.category.trim() === '') {
+                        res.send('Category is missing or undefined', 400);
+                    } else {
+                        recipe.save(function(err) {
+                            if (err) {
+                                res.send(err);
+                            }
+
+                            res.json({ message: 'Recipe updated!' });
+                        });
+                    }
+
+                });
+            }
         })
 
         // delete the recipe with this id
-        .delete(function(req, res) {
-                Recipe.remove({
-                        _id: req.params.recipe_id
-                }, function(err, recipe) {
-                        if (err)
-                                res.send(err);
+        .delete(function(req, res, next) {
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                Recipe.remove({$and:[{user_id:userId}, {_id:req.params.recipe_id}]}, function(err, recipe) {
+                    if (err) {
+                        res.send(err);
+                    }
 
-                        res.json({ message: 'Successfully deleted' });
+                    res.json({ message: 'Successfully deleted' });
                 });
+            }
         });
+
+        /* ADD FILE UPLOAD */
 
 
     /* authentication */
@@ -282,7 +309,7 @@ module.exports = function(app) {
 
         .post(function(req, res, next){
 
-            if(jwtauth(req, res, next)) {
+            if(jwtauth(req, res, next) === true) {
                 var nPass = req.param('pass'); /* NEW password */
                 var email = req.param('email');
                 accountManager.updatePassword(email, nPass, function(e, o){
@@ -299,7 +326,7 @@ module.exports = function(app) {
 
         .get(function(req, res, next){
 
-            if(jwtauth(req, res, next)) {
+            if(jwtauth(req, res, next) === true) {
                 accountManager.getAllRecords( function(e, accounts){
                     res.send({ accts : accounts });
                 });
@@ -312,7 +339,7 @@ module.exports = function(app) {
         .post(function(req, res, next){
 
 
-            if(jwtauth(req, res, next)) {
+            if(jwtauth(req, res, next) === true) {
                 var id = req.body.id;
 
                 if (typeof id == "undefined" || id.length != 24) {

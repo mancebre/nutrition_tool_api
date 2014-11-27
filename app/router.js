@@ -21,7 +21,7 @@ var emailDispatcher = require('./models/email-dispatcher');
 module.exports = function(app) {
 
     function getUserId(req, res) {
-        var token = (req.body && req.body.access_token) || (req.query && req.query.access_token) || req.headers['x-access-token'];
+        var token = (req.body && req.body.access_token) || (req.query && req.query.access_token) || req.headers.access_token;
         var decoded = jwt.decode(token, req.app.get('jwtTokenSecret'));
 
         if(!decoded.iss || typeof decoded.iss === undefined ) {
@@ -112,13 +112,13 @@ module.exports = function(app) {
         .get(function(req, res, next){
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
-                Recipe.find({$and:[{user_id:userId}, {_id:req.params.recipe_id}]}, function(err, recipe) {
+                Recipe.findOne({$and:[{user_id:userId}, {_id:req.params.recipe_id}]}, function(err, recipe) {
                     if (err){
                         res.send(err);
                     }
 
                     if (recipe) {
-                        res.json({recipe: recipe});
+                        res.json(recipe);
                     } else {
                         res.json({message:"Requested recipe does not exist."});
                     }

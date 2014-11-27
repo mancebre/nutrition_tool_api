@@ -3,7 +3,7 @@ var jwt = require('jwt-simple');
 
 module.exports = function(req, res, next) {
 
-	var token = (req.body && req.body.access_token) || (req.query && req.query.access_token) || req.headers['x-access-token'];
+	var token = (req.body && req.body.access_token) || (req.query && req.query.access_token) || req.headers.access_token;
 //		var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI1NDYxZTY1ZDdkYjZhOTBjMWYwMDAwMDEiLCJleHAiOjE0MTU5OTU3MDA4NTF9.VWXp-Od-DP5YAZlmkFm3e0hpfrY3YFjcEqkOVHSD95w';
 
 	if (token) {

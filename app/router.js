@@ -236,15 +236,15 @@ module.exports = function(app) {
             var repass = req.param('repass');
 
             /* Verification of the entered data */
-            if (typeof email === 'undefined' || email.trim() == '') {
+            if (typeof email === 'undefined' || email.trim() === '') {
                 res.send("Email is missing or undefined", 400);
             } else if (!accountManager.emailValidator(email)) {
                 res.send("Email format is not valid", 400);
-            } else if (typeof user === 'undefined' || user.trim() == '') {
+            } else if (typeof user === 'undefined' || user.trim() === '') {
                 res.send("User is missing or undefined", 400);
-            } else if (typeof pass === 'undefined' || pass.trim() == '') {
+            } else if (typeof pass === 'undefined' || pass.trim() === '') {
                 res.send("Password is missing or undefined", 400);
-            } else if (typeof repass === 'undefined' || repass.trim() == '') {
+            } else if (typeof repass === 'undefined' || repass.trim() === '') {
                 res.send("Retype password is missing or undefined", 400);
             } else if (pass != repass) {
                 res.send("Password is not equal with Retype password", 400);
@@ -258,7 +258,7 @@ module.exports = function(app) {
                     if (e){
                         res.send(e, 400);
                     }	else{
-                        res.send('ok', 200);
+                        res.json({message: 'You have successfully logged in'});
                     }
                 });
             }

@@ -20,6 +20,7 @@ var emailDispatcher = require('./models/email-dispatcher');
 
 module.exports = function(app) {
 
+    /* Returns user id if token is defined. */
     function getUserId(req, res) {
         var token = (req.body && req.body.access_token) || (req.query && req.query.access_token) || req.headers.access_token;
         var decoded = jwt.decode(token, req.app.get('jwtTokenSecret'));
@@ -258,7 +259,7 @@ module.exports = function(app) {
                     if (e){
                         res.send(e, 400);
                     }	else{
-                        res.json({message: 'You have successfully logged in'});
+                        res.json({message: 'You have successfully registered your account.'});
                     }
                 });
             }

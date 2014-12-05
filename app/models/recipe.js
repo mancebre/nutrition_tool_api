@@ -7,7 +7,11 @@ var RecipeSchema   = new Schema({
 	servings: Number,
 	ingredients: String,
 	directions: String,
-	category: String
+	category: String,
+	image0: String,
+	image1: String,
+	image2: String,
+	image3: String
 });
 
 module.exports = mongoose.model('Recipe', RecipeSchema);

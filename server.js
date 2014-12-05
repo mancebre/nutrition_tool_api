@@ -11,6 +11,8 @@ var cookieParser    = require('cookie-parser');
 var session         = require('express-session');
 var app         	= express();
 var cors            = require('cors');
+var multer          = require('multer');
+
 
 // configure app
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,6 +29,17 @@ app.use(session({
     proxy: true,
     resave: true,
     saveUninitialized: true
+}));
+app.use(multer({
+    // onFileUploadComplete: function (file) {
+    //     console.log(file);
+    // },
+    dest: './uploads/',
+    limits: {
+        fieldNameSize: 100,
+        files: 4,
+        fileSize: 2000000
+    }
 }));
 
 var port        = process.env.PORT || 8080; // set our port

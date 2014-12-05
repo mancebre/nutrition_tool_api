@@ -5,8 +5,10 @@
 var now = new Date();
 
 var express     = require('express');
-var moment 	= require('moment');
-var jwt 	= require('jwt-simple');
+var moment 	    = require('moment');
+var jwt 	    = require('jwt-simple');
+
+var img         = require('easyimage');
 
 // create our router
 var router = express.Router();
@@ -48,6 +50,18 @@ module.exports = function(app) {
         res.json({ message: 'hooray! welcome to our api!' });
     });
 
+    /* Image Upload */
+    router.route('/upload_image')
+
+        // Upload image
+        // ----------------------------------------------------
+        .post(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+
+                res.send(req.files);
+            }
+        });
+
     /* Recipe Dashboard */
     router.route('/recipe')
 
@@ -63,20 +77,24 @@ module.exports = function(app) {
                 recipe.ingredients = req.param('ingredients');
                 recipe.directions = req.param('directions');
                 recipe.category = req.param('category');
+                recipe.image0 = req.param('image0');
+                recipe.image1 = req.param('image1');
+                recipe.image2 = req.param('image2');
+                recipe.image3 = req.param('image3');
 
                 /* Verification of the entered data */
                 if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
-                    res.send("Name is missing or undefined", 400);
+                    res.send("Name is missing or undefined", 422);
                 } else if (typeof recipe.servings === 'undefined' || recipe.servings < 0) {
-                    res.send('"Number of Servings" is missing or undefined and must be greater than zero', 400);
+                    res.send('"Number of Servings" is missing or undefined and must be greater than zero', 422);
                 } else if (isNaN(recipe.servings)) {
-                    res.send('"Number of Servings" must be number', 400);
+                    res.send('"Number of Servings" must be number', 422);
                 } else if (typeof recipe.ingredients === 'undefined' || recipe.ingredients.trim() === '') {
-                    res.send('Ingredients is missing or undefined', 400);
+                    res.send('Ingredients is missing or undefined', 422);
                 } else if (typeof recipe.directions === 'undefined' || recipe.directions.trim() === '') {
-                    res.send('Directions is missing or undefined', 400);
+                    res.send('Directions is missing or undefined', 422);
                 } else if (typeof recipe.category === 'undefined' || recipe.category.trim() === '') {
-                    res.send('Category is missing or undefined', 400);
+                    res.send('Category is missing or undefined', 422);
                 } else {
                     recipe.save(function(err) {
                         if (err) {
@@ -97,7 +115,7 @@ module.exports = function(app) {
                 var userId = getUserId(req, res);
                 Recipe.find({user_id:userId}, function(err, recipes) {
                     if (err) {
-                        res.send(err);
+                        res.send(err, 500);
                     }
 
                     res.json(recipes);
@@ -115,7 +133,7 @@ module.exports = function(app) {
                 var userId = getUserId(req, res);
                 Recipe.findOne({$and:[{user_id:userId}, {_id:req.params.recipe_id}]}, function(err, recipe) {
                     if (err){
-                        res.send(err);
+                        res.send(err, 500);
                     }
 
                     if (recipe) {
@@ -143,20 +161,24 @@ module.exports = function(app) {
                     recipe.ingredients = req.param('ingredients');
                     recipe.directions = req.param('directions');
                     recipe.category = req.param('category');
+                    recipe.image0 = req.param('image0');
+                    recipe.image1 = req.param('image1');
+                    recipe.image2 = req.param('image2');
+                    recipe.image3 = req.param('image3');
 
                     /* Verification of the entered data */
                     if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
-                        res.send("Name is missing or undefined", 400);
+                        res.send("Name is missing or undefined", 422);
                     } else if (typeof recipe.servings === 'undefined' || recipe.servings < 0) {
-                        res.send('"Number of Servings" is missing or undefined and must be greater than zero', 400);
+                        res.send('"Number of Servings" is missing or undefined and must be greater than zero', 422);
                     } else if (isNaN(recipe.servings)) {
-                        res.send('"Number of Servings" must be number', 400);
+                        res.send('"Number of Servings" must be number', 422);
                     } else if (typeof recipe.ingredients === 'undefined' || recipe.ingredients.trim() === '') {
-                        res.send('Ingredients is missing or undefined', 400);
+                        res.send('Ingredients is missing or undefined', 422);
                     } else if (typeof recipe.directions === 'undefined' || recipe.directions.trim() === '') {
-                        res.send('Directions is missing or undefined', 400);
+                        res.send('Directions is missing or undefined', 422);
                     } else if (typeof recipe.category === 'undefined' || recipe.category.trim() === '') {
-                        res.send('Category is missing or undefined', 400);
+                        res.send('Category is missing or undefined', 422);
                     } else {
                         recipe.save(function(err) {
                             if (err) {
@@ -177,7 +199,7 @@ module.exports = function(app) {
                 var userId = getUserId(req, res);
                 Recipe.remove({$and:[{user_id:userId}, {_id:req.params.recipe_id}]}, function(err, recipe) {
                     if (err) {
-                        res.send(err);
+                        res.send(err, 500);
                     }
 
                     res.json({ message: 'Successfully deleted' });
@@ -200,7 +222,7 @@ module.exports = function(app) {
             var userData = {};
             accountManager.manualLogin(user, pass, function(e, o){
                 if (!o){
-                    res.send(e, 400);
+                    res.send(e, 401);
                 } else{
                     var expires = moment().add(1, 'day').valueOf();
                     var token = jwt.encode({
@@ -238,17 +260,17 @@ module.exports = function(app) {
 
             /* Verification of the entered data */
             if (typeof email === 'undefined' || email.trim() === '') {
-                res.send("Email is missing or undefined", 400);
+                res.send("Email is missing or undefined", 422);
             } else if (!accountManager.emailValidator(email)) {
-                res.send("Email format is not valid", 400);
+                res.send("Email format is not valid", 422);
             } else if (typeof user === 'undefined' || user.trim() === '') {
-                res.send("User is missing or undefined", 400);
+                res.send("User is missing or undefined", 422);
             } else if (typeof pass === 'undefined' || pass.trim() === '') {
-                res.send("Password is missing or undefined", 400);
+                res.send("Password is missing or undefined", 422);
             } else if (typeof repass === 'undefined' || repass.trim() === '') {
-                res.send("Retype password is missing or undefined", 400);
+                res.send("Retype password is missing or undefined", 422);
             } else if (pass != repass) {
-                res.send("Password is not equal with Retype password", 400);
+                res.send("Password is not equal with Retype password", 422);
             } else {
                 accountManager.addNewAccount({
                     email   : email,
@@ -257,7 +279,7 @@ module.exports = function(app) {
                     role    : 'user'
                 }, function(e){
                     if (e){
-                        res.send(e, 400);
+                        res.send(e, 500);
                     }	else{
                         res.json({message: 'You have successfully registered your account.'});
                     }
@@ -282,12 +304,12 @@ module.exports = function(app) {
                         if (!e) {
                             res.send('ok', 200);
                         } else{
-                            res.send('email-server-error', 400);
+                            res.send('email-server-error', 500);
                             for (var k in e) console.log('error : ', k, e[k]);
                         }
                     });
                 } else{
-                    res.send('email-not-found', 400);
+                    res.send('email-not-found', 422);
                 }
             });
         });
@@ -344,7 +366,7 @@ module.exports = function(app) {
                 var id = req.body.id;
 
                 if (typeof id == "undefined" || id.length != 24) {
-                    res.send('invalid id', 400);
+                    res.send('invalid id', 422);
                 } else {
                     accountManager.deleteAccount(req.body.id, function(e, obj){
                         if (!e){
@@ -352,7 +374,7 @@ module.exports = function(app) {
                             //res.clearCookie('pass');
                             req.session.destroy(function(e){ res.send('ok', 200); });
                         } else{
-                            res.send('record not found', 400);
+                            res.send('record not found', 422);
                         }
                     });
                 }

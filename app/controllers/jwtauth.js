@@ -11,14 +11,14 @@ module.exports = function(req, res, next) {
 			var decoded = jwt.decode(token, req.app.get('jwtTokenSecret'));
 
 			if (decoded.exp <= Date.now()) {
-				return res.send('Access token has expired', 500);
+				return res.send('Access token has expired', 401);
 			} else {
 				Account.findById(decoded.iss, function(err, user) {
 					if (err) {
 						console.log(err);
 						return res.send('Ups, something has gone wrong.', 500);
 					} else if (!user) {
-						return res.send('User does not exist', 500);
+						return res.send('User does not exist', 401);
 					} else {
 						req.user = user;
 						return true;
@@ -34,7 +34,7 @@ module.exports = function(req, res, next) {
 			return next();
 		}
 	} else {
-		res.end('Access token is missing', 500);
+		res.end('Access token is missing', 401);
 		return false;
 	}
 };

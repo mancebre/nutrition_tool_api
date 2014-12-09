@@ -38,7 +38,7 @@ app.use(multer({
     limits: {
         fieldNameSize: 100,
         files: 4,
-        fileSize: 2000000
+        fileSize: 5000000
     }
 }));
 

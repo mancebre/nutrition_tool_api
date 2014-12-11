@@ -9,8 +9,8 @@ var accounts = require('../models/account');
 
 /* login validation methods */
 
-exports.autoLogin = function(user, pass, callback) {
-    accounts.findOne({user:user}, function(e, o) {
+exports.autoLogin = function(email, pass, callback) {
+    accounts.findOne({email:email}, function(e, o) {
         if (o){
             o.pass == pass ? callback(o) : callback(null);
         }	else{
@@ -19,16 +19,16 @@ exports.autoLogin = function(user, pass, callback) {
     });
 };
 
-exports.manualLogin = function(user, pass, callback) {
-    accounts.findOne({user:user}, function(e, o) {
+exports.manualLogin = function(email, pass, callback) {
+    accounts.findOne({email:email}, function(e, o) {
         if (o === null){
-            callback('user-not-found');
+            callback('Email not found');
         }	else{
             validatePassword(pass, o.pass, function(err, res) {
                 if (res){
                     callback(null, o);
                 }	else{
-                    callback('invalid-password');
+                    callback('Invalid password');
                 }
             });
         }

@@ -111,14 +111,28 @@ module.exports = function(app) {
         // Get all recipes
         // ----------------------------------------------------
         .get(function(req, res, next){
+            var page = parseInt(req.query.page.trim()) - 1;
+            var limit = 2;
+            var skip = (page > 0) ? limit * page : 0;
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
-                Recipe.find({user_id:userId}, function(err, recipes) {
-                    if (err) {
-                        res.send(err, 500);
-                    }
+                Recipe.find({user_id:userId}).sort({'name': 1}).skip(skip).limit(limit).exec(function(err, recipes) {
+                    Recipe.count({user_id:userId}).exec(function(err, count) {
 
-                    res.json(recipes);
+                        if (err) {
+                            res.send(err, 500);
+                        }
+
+                        res.send('recipes', {
+                            recipes: recipes,
+                            page: page + 1,
+                            count: count,
+                            limit: limit,
+                            skip: skip
+                        });
+                    });
+
+                    // res.json(recipes);
                 });
             }
         });
@@ -217,10 +231,10 @@ module.exports = function(app) {
     router.route('/account/login')
 
         .post(function(req, res){
-            var user = req.param('user');
+            var email = req.param('email');
             var pass = req.param('pass');
             var userData = {};
-            accountManager.manualLogin(user, pass, function(e, o){
+            accountManager.manualLogin(email, pass, function(e, o){
                 if (!o){
                     res.send(e, 401);
                 } else{

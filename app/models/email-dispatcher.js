@@ -25,7 +25,7 @@ EM.dispatchResetPasswordLink = function(account, callback)
 
 EM.composeEmail = function(o)
 {
-    var link = 'http://localhost:8080/api/account/reset-password?e='+o.email+'&p='+o.pass;
+    var link = 'http://local.helloself.co/account?e='+o.email+'&p='+o.pass+'/#/reset-password';
     var html = "<html><body>";
     html += "Hi "+o.user+",<br><br>";
     html += "Your username is :: <b>"+o.user+"</b><br><br>";

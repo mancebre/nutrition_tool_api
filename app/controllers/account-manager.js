@@ -86,7 +86,7 @@ exports.updatePassword = function(email, newPass, callback) {
         }	else{
             saltAndHash(newPass, function(hash){
                 o.pass = hash;
-                accounts.save(o, callback);
+                o.save(callback);
             });
         }
     });
@@ -104,7 +104,7 @@ exports.getAccountByEmail = function(email, callback) {
 
 exports.validateResetLink = function(email, passHash, callback) {
     accounts.find({ $and: [{email:email, pass:passHash}] }, function(e, o){
-        callback(o ? 'ok' : null);
+        callback(Object.keys(o).length ? 'ok' : null);
     });
 };
 

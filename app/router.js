@@ -311,12 +311,12 @@ module.exports = function(app) {
             // look up the user's account via their email //
             accountManager.getAccountByEmail(req.param('email'), function(o){
                 if (o){
-                    res.send('ok', 200);
+                    // res.send('ok', 200);
                     emailDispatcher.dispatchResetPasswordLink(o, function(e, m){
                         // this callback takes a moment to return //
                         // should add an ajax loader to give user feedback //
                         if (!e) {
-                            res.send('ok', 200);
+                            res.send(200);
                         } else{
                             res.send('email-server-error', 500);
                             for (var k in e) console.log('error : ', k, e[k]);
@@ -329,7 +329,7 @@ module.exports = function(app) {
         });
 
 
-    router.route('/account/reset-password')
+    router.route('/account/reset-password') /* TODO: ADD SECURITY TOKEN WHICH WILL EXPIRE IN 24 HOURS AND WHICH WILL BE CHECKED WHEN PASSWORD RESET LINK IS CHECKED AND WHEN NEW PASSWORD IS SAVED. */
 
         .get(function(req, res, next){
 
@@ -337,26 +337,27 @@ module.exports = function(app) {
             var passH = req.query["p"];
             accountManager.validateResetLink(email, passH, function(e){
                 if (e != 'ok'){
-                    res.send('error', 400);
+                    res.send('Invalid password reset link', 400);
                 } else{
-                    res.send('ok', 200); /* After this response you can redirect user to password reset page (on app side) */
+                    res.send(200); /* After this response you can redirect user to password reset page (on app side) */
                 }
             });
         })
 
         .post(function(req, res, next){
 
-            if(jwtauth(req, res, next) === true) {
-                var nPass = req.param('pass'); /* NEW password */
-                var email = req.param('email');
-                accountManager.updatePassword(email, nPass, function(e, o){
-                    if (o){
+            var nPass = req.param('pass'); /* NEW password */
+            var email = decodeURIComponent(req.param('email'));
+
+            accountManager.updatePassword(email, nPass, function(e, o){
+                    if (!e){
                         res.send('ok', 200);
                     } else{
+                        console.log(e);
                         res.send('unable to update password', 400);
                     }
-                });
-            }
+            });
+
         });
 
     router.route('/account/print')

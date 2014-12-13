@@ -1,9 +1,9 @@
 
-module.exports = { /* TODO add email params */
+module.exports = {
 
     host		: 'smtp.gmail.com',
-    user 		: 'dj.mancovic@gmail.com',
-    password 	: 'VitezKoja1A',
-    sender		: 'Djordje Mancovic <dj.mancovic@gmail.com>'
+    user 		: 'helloself2015@gmail.com',
+    password 	: 'ThisTimeNextYear2015',
+    sender		: 'Do not reply <helloself2015@gmail.com>'
 
 };

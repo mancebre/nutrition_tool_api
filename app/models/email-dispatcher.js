@@ -30,8 +30,8 @@ EM.composeEmail = function(o)
     html += "Hi "+o.user+",<br><br>";
     html += "Your username is :: <b>"+o.user+"</b><br><br>";
     html += "<a href='"+link+"'>Please click here to reset your password</a><br><br>";
-    html += "Cheers,<br>";
-    html += "<a href='http://twitter.com/braitsch'>braitsch</a><br><br>";
+    html += "Have a nice day,<br>";
+    html += "<a href='http://helloself.co'>Helloself</a><br><br>";
     html += "</body></html>";
     return  [{data:html, alternative:true}];
 };

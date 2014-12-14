@@ -349,14 +349,18 @@ module.exports = function(app) {
             var nPass = req.param('pass'); /* NEW password */
             var email = decodeURIComponent(req.param('email'));
 
-            accountManager.updatePassword(email, nPass, function(e, o){
-                    if (!e){
-                        res.send('ok', 200);
-                    } else{
-                        console.log(e);
-                        res.send('unable to update password', 400);
-                    }
-            });
+            if (!nPass || nPass === '') {
+                res.send('New password field is empty', 400);
+            } else {
+                accountManager.updatePassword(email, nPass, function(e, o){
+                        if (!e){
+                            res.send('ok', 200);
+                        } else{
+                            console.log(e);
+                            res.send('Unable to update password', 400);
+                        }
+                });
+            }
 
         });
 

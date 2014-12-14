@@ -112,7 +112,7 @@ module.exports = function(app) {
         // ----------------------------------------------------
         .get(function(req, res, next){
             var page = parseInt(req.query.page.trim()) - 1;
-            var limit = 2;
+            var limit = 12;
             var skip = (page > 0) ? limit * page : 0;
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);

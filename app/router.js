@@ -81,6 +81,8 @@ module.exports = function(app) {
                 recipe.image1 = req.param('image1');
                 recipe.image2 = req.param('image2');
                 recipe.image3 = req.param('image3');
+                recipe.date = moment().format('MMMM Do YYYY, h:mm:ss a');
+                recipe.verified = 0;
 
                 /* Verification of the entered data */
                 if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
@@ -111,12 +113,15 @@ module.exports = function(app) {
         // Get all recipes
         // ----------------------------------------------------
         .get(function(req, res, next){
+            var dateSort = req.query.filter1 === 'newest' ? 1 : -1;
+            var verified = req.query.filter2 === 'verified' ? 1 : 0;
+
             var page = parseInt(req.query.page.trim()) - 1;
             var limit = 12;
             var skip = (page > 0) ? limit * page : 0;
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
-                Recipe.find({user_id:userId}).sort({'name': 1}).skip(skip).limit(limit).exec(function(err, recipes) {
+                Recipe.find({user_id: userId, 'verified': verified}).sort({'date': dateSort}).skip(skip).limit(limit).exec(function(err, recipes) {
                     Recipe.count({user_id:userId}).exec(function(err, count) {
 
                         if (err) {

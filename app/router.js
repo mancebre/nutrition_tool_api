@@ -122,7 +122,7 @@ module.exports = function(app) {
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
                 Recipe.find({user_id: userId, 'verified': verified}).sort({'date': dateSort}).skip(skip).limit(limit).exec(function(err, recipes) {
-                    Recipe.count({user_id:userId}).exec(function(err, count) {
+                    Recipe.count({user_id: userId, 'verified': verified}).exec(function(err, count) {
 
                         if (err) {
                             res.send(err, 500);
@@ -142,7 +142,7 @@ module.exports = function(app) {
             }
         });
 
-    // on routes that end in /bears/:bear_id
+    // Get one recipe
     // ----------------------------------------------------
     router.route('/recipe/:recipe_id')
 
@@ -184,6 +184,7 @@ module.exports = function(app) {
                     recipe.image1 = req.param('image1');
                     recipe.image2 = req.param('image2');
                     recipe.image3 = req.param('image3');
+                    recipe.verified = 0;
 
                     /* Verification of the entered data */
                     if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
@@ -226,7 +227,43 @@ module.exports = function(app) {
             }
         });
 
-        /* ADD FILE UPLOAD */
+    // Duplicate recipes
+    // ----------------------------------------------------
+    router.route('/duplicate')
+
+        .post(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var mongoose = require('mongoose');
+                var ids = req.param('recipeIds');
+
+                var clones = {};
+                var count = 0;
+                ids.forEach(function(id) {
+                    Recipe.findById(id).exec(
+                        function(err, doc) {
+
+                            if (err) {
+                                res.send(err, 500);
+                            }
+
+                            doc._id = mongoose.Types.ObjectId();
+                            doc.isNew = true; //<--------------------IMPORTANT
+                            doc.date = moment().format('MMMM Do YYYY, h:mm:ss a');
+
+                            clones[count] = doc;
+
+                            doc.save(count++);
+
+                            if (count === ids.length) {
+                                setTimeout(function() {
+                                    res.json(clones);
+                                }, 500);
+                            }
+                        }
+                    );
+                });
+            }
+        });
 
 
     /* authentication */

@@ -13,7 +13,8 @@ var RecipeSchema   = new Schema({
 	image2: String,
 	image3: String,
 	date: String,
-	verified: Boolean
+	verified: Boolean,
+	archive: Boolean
 });
 
 module.exports = mongoose.model('Recipe', RecipeSchema);

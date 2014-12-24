@@ -83,6 +83,7 @@ module.exports = function(app) {
                 recipe.image3 = req.param('image3');
                 recipe.date = moment().format('MMMM Do YYYY, h:mm:ss a');
                 recipe.verified = 0;
+                recipe.archive = 0;
 
                 /* Verification of the entered data */
                 if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
@@ -121,7 +122,7 @@ module.exports = function(app) {
             var skip = (page > 0) ? limit * page : 0;
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
-                Recipe.find({user_id: userId, 'verified': verified}).sort({'date': dateSort}).skip(skip).limit(limit).exec(function(err, recipes) {
+                Recipe.find({user_id: userId, 'verified': verified, archive : 0}).sort({'date': dateSort}).skip(skip).limit(limit).exec(function(err, recipes) {
                     Recipe.count({user_id: userId, 'verified': verified}).exec(function(err, count) {
 
                         if (err) {
@@ -185,6 +186,7 @@ module.exports = function(app) {
                     recipe.image2 = req.param('image2');
                     recipe.image3 = req.param('image3');
                     recipe.verified = 0;
+                    //recipe.archive = 0;
 
                     /* Verification of the entered data */
                     if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
@@ -262,6 +264,29 @@ module.exports = function(app) {
                         }
                     );
                 });
+            }
+        });
+
+    // Archive recipes
+    // ----------------------------------------------------
+    router.route('/archive')
+
+        .post(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var ids = req.param('recipeIds');
+
+                Recipe.update(
+                   { _id: { $in: ids } },
+                   { $set: { archive : 1 } },
+                   {multi: true},
+                   function(err, rows) {
+                        if (err) {
+                            console.log(err);
+                        } else {
+                            res.json(rows);
+                        }
+                   }
+                );
             }
         });
 

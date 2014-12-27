@@ -319,9 +319,9 @@ module.exports = function(app) {
                     userData._id    = o._id;
 
                     res.json({
-                                    token : token,
-                                    expires: expires,
-                                    user: userData
+                        token : token,
+                        expires: expires,
+                        user: userData
                     });
                 }
             });

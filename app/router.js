@@ -17,6 +17,7 @@ var jwtauth = require('./controllers/jwtauth.js');
 
 var Bear = require('./models/bear');
 var Recipe = require('./models/recipe');
+var MenuCategory = require('./models/menu_category');
 var accountManager = require('./controllers/account-manager');
 var emailDispatcher = require('./models/email-dispatcher');
 
@@ -276,17 +277,104 @@ module.exports = function(app) {
                 var ids = req.param('recipeIds');
 
                 Recipe.update(
-                   { _id: { $in: ids } },
-                   { $set: { archive : 1 } },
-                   {multi: true},
-                   function(err, rows) {
+                    { _id: { $in: ids } },
+                    { $set: { archive : 1 } },
+                    {multi: true},
+                    function(err, rows) {
                         if (err) {
                             console.log(err);
                         } else {
                             res.json(rows);
                         }
-                   }
+                    }
                 );
+            }
+        });
+
+    // Menu Category
+    // ----------------------------------------------------
+    router.route('/menu_category')
+
+        .post(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var newCategory = req.param('new-group');
+
+                if (typeof newCategory !== "undefined" && newCategory.trim() !== "") {
+                    var userId = getUserId(req, res);
+                    var category = new MenuCategory();
+                    category.user_id = userId;
+                    category.name = newCategory;
+                    category.date = moment().format('MMMM Do YYYY, h:mm:ss a');
+
+                    category.save(function(err) {
+                        if (err) {
+                            console.log(err);
+                            res.send(err);
+                        }
+
+                        res.json({ message: 'New Category Saved!' });
+                    });
+                } else {
+                    res.send(400);
+                }
+
+                res.json(newCategory);
+            }
+        })
+
+        // Get all categories
+        // ----------------------------------------------------
+        .get(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                MenuCategory.find({user_id: userId}).exec(function (err, categories) {
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    res.json({ categories : categories });
+                });
+            }
+        });
+
+    router.route('/menu_category/:cat_id')
+        // Update category name
+        // ----------------------------------------------------
+        .put(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                MenuCategory.findOne({$and:[{user_id:userId}, {_id:req.params.cat_id}]}, function(err, category) {
+
+                    if (err) {
+                        res.send(err);
+                    }
+
+                    category.name = req.param('category_name');
+
+                    category.save(function(err) {
+                        if (err) {
+                            res.send(err);
+                        }
+
+                        res.json({ message: 'Category updated!' });
+                    });
+
+                });
+            }
+        })
+
+        // Delete category
+        // ----------------------------------------------------
+        .delete(function(req, res, next) {
+            if(jwtauth(req, res, next) === true) {
+                MenuCategory.remove({
+                    _id: req.params.cat_id
+                }, function (err, category) {
+                    if (err)
+                        res.send(err);
+
+                    res.json({message: 'Successfully deleted'});
+                });
             }
         });
 

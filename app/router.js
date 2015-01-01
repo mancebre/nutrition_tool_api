@@ -117,13 +117,14 @@ module.exports = function(app) {
         .get(function(req, res, next){
             var dateSort = req.query.filter1 === 'newest' ? 1 : -1;
             var verified = req.query.filter2 === 'verified' ? 1 : 0;
+            var sort = req.query.sort === "Z-A" ? 0 : 1;
 
             var page = parseInt(req.query.page.trim()) - 1;
             var limit = 12;
             var skip = (page > 0) ? limit * page : 0;
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
-                Recipe.find({user_id: userId, 'verified': verified, archive : 0}).sort({'date': dateSort}).skip(skip).limit(limit).exec(function(err, recipes) {
+                Recipe.find({user_id: userId, 'verified': verified, archive : 0}).sort({'date': dateSort, 'name': sort}).skip(skip).limit(limit).exec(function(err, recipes) {
                     Recipe.count({user_id: userId, 'verified': verified}).exec(function(err, count) {
 
                         if (err) {
@@ -177,40 +178,45 @@ module.exports = function(app) {
                     }
 
                     recipe.user_id = userId;
-                    recipe.name = req.param('name');
-                    recipe.servings = req.param('servings');
-                    recipe.ingredients = req.param('ingredients');
-                    recipe.directions = req.param('directions');
-                    recipe.category = req.param('category');
-                    recipe.image0 = req.param('image0');
-                    recipe.image1 = req.param('image1');
-                    recipe.image2 = req.param('image2');
-                    recipe.image3 = req.param('image3');
                     recipe.verified = 0;
-                    //recipe.archive = 0;
+                    recipe.archive = 0;
 
                     /* Verification of the entered data */
-                    if (typeof recipe.name === 'undefined' || recipe.name.trim() === '') {
-                        res.send("Name is missing or undefined", 422);
-                    } else if (typeof recipe.servings === 'undefined' || recipe.servings < 0) {
-                        res.send('"Number of Servings" is missing or undefined and must be greater than zero', 422);
-                    } else if (isNaN(recipe.servings)) {
-                        res.send('"Number of Servings" must be number', 422);
-                    } else if (typeof recipe.ingredients === 'undefined' || recipe.ingredients.trim() === '') {
-                        res.send('Ingredients is missing or undefined', 422);
-                    } else if (typeof recipe.directions === 'undefined' || recipe.directions.trim() === '') {
-                        res.send('Directions is missing or undefined', 422);
-                    } else if (typeof recipe.category === 'undefined' || recipe.category.trim() === '') {
-                        res.send('Category is missing or undefined', 422);
-                    } else {
-                        recipe.save(function(err) {
-                            if (err) {
-                                res.send(err);
-                            }
-
-                            res.json({ message: 'Recipe updated!' });
-                        });
+                    if (typeof req.param('name') !== 'undefined' && req.param('name').trim() !== '') {
+                        recipe.name = req.param('name');
                     }
+                    if (typeof req.param('servings') !== 'undefined' && req.param('servings') > 0) {
+                        recipe.servings = req.param('servings');
+                    }
+                    if (typeof req.param('ingredients') !== 'undefined' && req.param('ingredients').trim() !== '') {
+                        recipe.ingredients = req.param('ingredients');
+                    }
+                    if (typeof req.param('directions') !== 'undefined' && req.param('directions').trim() !== '') {
+                        recipe.directions = req.param('directions');
+                    }
+                    if (typeof req.param('category') !== 'undefined' && req.param('category').trim() !== '') {
+                        recipe.category = req.param('category');
+                    }
+                    if (typeof req.param('image0') !== 'undefined' && req.param('image0').trim() !== '') {
+                        recipe.image0 = req.param('image0');
+                    }
+                    if (typeof req.param('image1') !== 'undefined' && req.param('image1').trim() !== '') {
+                        recipe.image1 = req.param('image1');
+                    }
+                    if (typeof req.param('image2') !== 'undefined' && req.param('image2').trim() !== '') {
+                        recipe.image2 = req.param('image2');
+                    }
+                    if (typeof req.param('image3') !== 'undefined' && req.param('image3').trim() !== '') {
+                        recipe.image3 = req.param('image3');
+                    }
+
+                    recipe.save(function(err) {
+                        if (err) {
+                            res.send(err);
+                        }
+
+                        res.json({ message: 'Recipe updated!' });
+                    });
 
                 });
             }

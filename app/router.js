@@ -18,6 +18,7 @@ var jwtauth = require('./controllers/jwtauth.js');
 var Bear = require('./models/bear');
 var Recipe = require('./models/recipe');
 var MenuCategory = require('./models/menu_category');
+var CompanyProfile = require('./models/company_profile');
 var accountManager = require('./controllers/account-manager');
 var emailDispatcher = require('./models/email-dispatcher');
 
@@ -294,6 +295,150 @@ module.exports = function(app) {
                         }
                     }
                 );
+            }
+        });
+
+    // Company Profile
+    // ----------------------------------------------------
+    router.route('/company/profile')
+
+        .post(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                var name = req.param('name');
+                var webSite = req.param('web-site');
+                var country = req.param('country');
+                var state = req.param('state');
+                var city = req.param('city');
+                var address = req.param('address');
+                var zipCode = req.param('zip-code');
+                var phoneNumber = req.param('phone-number');
+                var image = req.param('image0');
+
+                var profile = new CompanyProfile();
+
+                if (typeof name !== "undefined" && name.trim() !== "") {
+                    profile.name = name;
+                }
+                if (typeof webSite !== "undefined" && webSite.trim() !== "") {
+                    profile.webSite = webSite;
+                }
+                if (typeof country !== "undefined" && country.trim() !== "") {
+                    profile.country = country;
+                }
+                if (typeof state !== "undefined" && state.trim() !== "") {
+                    profile.state = state;
+                }
+                if (typeof city !== "undefined" && city.trim() !== "") {
+                    profile.city = city;
+                }
+                if (typeof address !== "undefined" && address.trim() !== "") {
+                    profile.address = address;
+                }
+                if (typeof zipCode !== "undefined" && zipCode.trim() !== "") {
+                    profile.zipCode = zipCode;
+                }
+                if (typeof phoneNumber !== "undefined" && zipCode.trim() !== "") {
+                    profile.phoneNumber = phoneNumber;
+                }
+                if (typeof image !== "undefined" && image.trim() !== "") {
+                    profile.image = phoneNumber;
+                }
+                profile.user_id = userId;
+                profile.date = moment().format('MMMM Do YYYY, h:mm:ss a');
+
+                profile.save(function(err) {
+                    if (err) {
+                        console.log(err);
+                        res.send(err);
+                    }
+
+                    res.json({ message: 'Company Profile Saved' });
+                });
+            }
+        })
+
+        .get(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+
+                CompanyProfile.findOne({user_id:userId}, function(err, result) {
+                    if (err){
+                        res.send(err, 500);
+                    }
+
+                    if (result) {
+                        res.json(result);
+                    } else {
+                        res.json({message:"Requested profile does not exist."});
+                    }
+                });
+            }
+        })
+
+    ;
+    router.route('/company/profile/:id')
+        .put(function(req, res, next) {
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+
+                var userId = getUserId(req, res);
+                var name = req.param('name');
+                var webSite = req.param('web-site');
+                var country = req.param('country');
+                var state = req.param('state');
+                var city = req.param('city');
+                var address = req.param('address');
+                var zipCode = req.param('zip-code');
+                var phoneNumber = req.param('phone-number');
+                var image = req.param('image0');
+
+                CompanyProfile.findOne({user_id:userId}, function(err, profile) {
+                    if (err){
+                        res.send(err, 500);
+                    }
+
+                    if (profile) {
+                        if (typeof name !== "undefined" && name.trim() !== "" && profile.name !== name) {
+                            profile.name = name;
+                        }
+                        if (typeof webSite !== "undefined" && webSite.trim() !== "" && profile.webSite !== webSite) {
+                            profile.webSite = webSite;
+                        }
+                        if (typeof country !== "undefined" && country.trim() !== "" && profile.country !== country) {
+                            profile.country = country;
+                        }
+                        if (typeof state !== "undefined" && state.trim() !== "" && profile.state !== state) {
+                            profile.state = state;
+                        }
+                        if (typeof city !== "undefined" && city.trim() !== "" && profile.city !== city) {
+                            profile.city = city;
+                        }
+                        if (typeof address !== "undefined" && address.trim() !== "" && profile.address !== address) {
+                            profile.address = address;
+                        }
+                        if (typeof zipCode !== "undefined" && zipCode.trim() !== "" && profile.zipCode !== zipCode) {
+                            profile.zipCode = zipCode;
+                        }
+                        if (typeof phoneNumber !== "undefined" && phoneNumber.trim() !== "" && profile.phoneNumber !== phoneNumber) {
+                            profile.phoneNumber = phoneNumber;
+                        }
+                        if (typeof image !== "undefined" && image.trim() !== "" && profile.image !== image) {
+                            profile.image = image;
+                        }
+                        profile.updated = moment().format('MMMM Do YYYY, h:mm:ss a');
+
+                        profile.save(function(err) {
+                            if (err) {
+                                res.send(err);
+                            }
+
+                            res.json({ message: 'Profile updated!' });
+                        });
+                    } else {
+                        res.json({message:"Ups, something has gone wrong."});
+                    }
+                });
             }
         });
 

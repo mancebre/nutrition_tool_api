@@ -21,6 +21,7 @@ var MenuCategory = require('./models/menu_category');
 var CompanyProfile = require('./models/company_profile');
 var accountManager = require('./controllers/account-manager');
 var emailDispatcher = require('./models/email-dispatcher');
+var Account = require('./models/account');
 
 module.exports = function(app) {
 
@@ -116,9 +117,9 @@ module.exports = function(app) {
         // Get all recipes
         // ----------------------------------------------------
         .get(function(req, res, next){
-            var dateSort = req.query.filter1 === 'newest' ? 1 : -1;
+            var dateSort = req.query.filter1 === 'newest' ? -1 : 1;
             var verified = req.query.filter2 === 'verified' ? 1 : 0;
-            var sort = req.query.sort === "Z-A" ? 0 : 1;
+            var sort = req.query.sort === "Z-A" ? -1 : 1;
 
             var page = parseInt(req.query.page.trim()) - 1;
             var limit = 12;
@@ -374,9 +375,9 @@ module.exports = function(app) {
                     }
                 });
             }
-        })
+        });
 
-    ;
+
     router.route('/company/profile/:id')
         .put(function(req, res, next) {
             if(jwtauth(req, res, next) === true) {
@@ -705,6 +706,72 @@ module.exports = function(app) {
                 }
             }
 
+        });
+
+    router.route('/account/details')
+        .get(function(req, res, next){
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+                Account.findById(userId).exec(function (err, account) {
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    res.json( account );
+                });
+            }
+        });
+
+    router.route('/account/details/:id')
+        .put(function(req, res, next) {
+            if(jwtauth(req, res, next) === true) {
+                var userId = getUserId(req, res);
+
+                var name = req.param('name');
+                var company_role = req.param('company_role');
+                var email = req.param('email');
+                var full_name = req.param('full_name');
+                var phone = req.param('phone');
+                var image = req.param('image0');
+
+                Account.findById(userId, function(err, account) {
+                    if (err){
+                        res.send(err, 500);
+                    }
+
+                    if (account) {
+                        if (typeof name !== "undefined" && name.trim() !== "" && account.name !== name) {
+                            account.name = name;
+                        }
+                        if (typeof company_role !== "undefined" && company_role.trim() !== "" && account.company_role !== company_role) {
+                            account.company_role = company_role;
+                        }
+                        if (typeof email !== "undefined" && email.trim() !== "" && account.email !== email) {
+                            account.email = email;
+                        }
+                        if (typeof full_name !== "undefined" && full_name.trim() !== "" && account.full_name !== full_name) {
+                            account.full_name = full_name;
+                        }
+                        if (typeof phone !== "undefined" && phone.trim() !== "" && account.phone !== phone) {
+                            account.phone = phone;
+                        }
+                        if (typeof image !== "undefined" && image.trim() !== "" && account.image !== image) {
+                            account.image = image;
+                        }
+                        account.updated = moment().format('MMMM Do YYYY, h:mm:ss a');
+
+                        account.save(function(err) {
+                            if (err) {
+                                res.send(err);
+                            }
+
+                            res.json({ message: 'Account updated!' });
+                        });
+                    } else {
+                        res.json({message:"Ups, something has gone wrong."});
+                    }
+                });
+            }
         });
 
     //app.get('/account//reset', function(req, res) {

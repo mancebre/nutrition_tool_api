@@ -260,7 +260,7 @@ module.exports = function(app) {
                             doc._id = mongoose.Types.ObjectId();
                             doc.isNew = true; //<--------------------IMPORTANT
                             doc.date = moment().format('MMMM Do YYYY, h:mm:ss a');
-                            doc.name = "Copy " + doc.name,
+                            doc.name = doc.name + " copy",
 
                             clones[count] = doc;
 

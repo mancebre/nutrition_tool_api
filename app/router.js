@@ -126,7 +126,7 @@ module.exports = function(app) {
             var skip = (page > 0) ? limit * page : 0;
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
-                Recipe.find({user_id: userId, 'verified': verified, archive : 0}).sort({'date': dateSort, 'name': sort}).skip(skip).limit(limit).exec(function(err, recipes) {
+                Recipe.find({user_id: userId, 'verified': verified, archive : 0}).sort({'_id': dateSort, 'name': sort}).skip(skip).limit(limit).exec(function(err, recipes) {
                     Recipe.count({user_id: userId, 'verified': verified}).exec(function(err, count) {
 
                         if (err) {

@@ -117,17 +117,27 @@ module.exports = function(app) {
         // Get all recipes
         // ----------------------------------------------------
         .get(function(req, res, next){
-            var dateSort = req.query.filter1 === 'newest' ? -1 : 1;
-            var verified = req.query.filter2 === 'verified' ? 1 : 0;
-            var sort = req.query.sort === "Z-A" ? -1 : 1;
+            if (req.query.filter1 === 'newest' || req.query.filter1 === 'oldest') {
+                var dateSort = req.query.filter1 === 'newest' ? -1 : 1;
+                var sort = {'_id': dateSort};
+            } else {
+                var nameSort = req.query.sort === "Z-A" ? -1 : 1;
+                var sort = {'name': nameSort};
+            }
+
+            if (typeof req.query.filter2 !== 'undefended') {
+                var verified = req.query.filter2 === 'verified' ? 1 : 0;
+            } else {
+                var verified = 0;
+            }
 
             var page = parseInt(req.query.page.trim()) - 1;
             var limit = 12;
             var skip = (page > 0) ? limit * page : 0;
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
-                Recipe.find({user_id: userId, 'verified': verified, archive : 0}).sort({'_id': dateSort, 'name': sort}).skip(skip).limit(limit).exec(function(err, recipes) {
-                    Recipe.count({user_id: userId, 'verified': verified}).exec(function(err, count) {
+                Recipe.find({user_id: userId, 'verified': verified, archive : 0}).sort(sort).skip(skip).limit(limit).exec(function(err, recipes) {
+                    Recipe.count({user_id: userId, 'verified': verified, archive : 0}).exec(function(err, count) {
 
                         if (err) {
                             res.send(err, 500);

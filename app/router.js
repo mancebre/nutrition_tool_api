@@ -171,7 +171,13 @@ module.exports = function(app) {
                     }
 
                     if (recipe) {
-                        res.json(recipe);
+                        MenuCategory.find({user_id: userId}).exec(function (err, categories) {
+                            if (err) {
+                                console.log(err);
+                            }
+
+                            res.json({recipe: recipe, categories: categories});
+                        });
                     } else {
                         res.json({message:"Requested recipe does not exist."});
                     }

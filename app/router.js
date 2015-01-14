@@ -117,26 +117,33 @@ module.exports = function(app) {
         // Get all recipes
         // ----------------------------------------------------
         .get(function(req, res, next){
-            if (req.query.filter1 === 'newest' || req.query.filter1 === 'oldest') {
-                var dateSort = req.query.filter1 === 'newest' ? -1 : 1;
-                var sort = {'_id': dateSort};
-            } else {
-                var nameSort = req.query.sort === "Z-A" ? -1 : 1;
-                var sort = {'name': nameSort};
-            }
-
-            if (typeof req.query.filter2 !== 'undefended') {
-                var verified = req.query.filter2 === 'verified' ? 1 : 0;
-            } else {
-                var verified = 0;
-            }
-
-            var page = parseInt(req.query.page.trim()) - 1;
-            var limit = 12;
-            var skip = (page > 0) ? limit * page : 0;
             if(jwtauth(req, res, next) === true) {
                 var userId = getUserId(req, res);
-                Recipe.find({user_id: userId, 'verified': verified, archive : 0}).sort(sort).skip(skip).limit(limit).exec(function(err, recipes) {
+                if (req.query.filter1 === 'newest' || req.query.filter1 === 'oldest') {
+                    var dateSort = req.query.filter1 === 'newest' ? -1 : 1;
+                    var sort = {'_id': dateSort};
+                } else {
+                    var nameSort = req.query.sort === "Z-A" ? -1 : 1;
+                    var sort = {'name': nameSort};
+                }
+
+                if (typeof req.query.filter2 !== 'undefined') {
+                    var verified = req.query.filter2 === 'verified' ? 1 : 0;
+                } else {
+                    var verified = 0;
+                }
+
+                if (typeof req.query.group !== 'undefined') {
+                    var group = req.query.group;
+                    var search = {user_id: userId, 'verified': verified, archive : 0, category : group.trim()};
+                } else {
+                    var search = {user_id: userId, 'verified': verified, archive : 0};
+                }
+                
+                var page = parseInt(req.query.page.trim()) - 1;
+                var limit = 12;
+                var skip = (page > 0) ? limit * page : 0;
+                Recipe.find(search).sort(sort).skip(skip).limit(limit).exec(function(err, recipes) {
                     Recipe.count({user_id: userId, 'verified': verified, archive : 0}).exec(function(err, count) {
 
                         if (err) {

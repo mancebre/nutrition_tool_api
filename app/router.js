@@ -139,12 +139,12 @@ module.exports = function(app) {
                 } else {
                     var search = {user_id: userId, 'verified': verified, archive : 0};
                 }
-                
+
                 var page = parseInt(req.query.page.trim()) - 1;
                 var limit = 12;
                 var skip = (page > 0) ? limit * page : 0;
                 Recipe.find(search).sort(sort).skip(skip).limit(limit).exec(function(err, recipes) {
-                    Recipe.count({user_id: userId, 'verified': verified, archive : 0}).exec(function(err, count) {
+                    Recipe.count(search).exec(function(err, count) {
 
                         if (err) {
                             res.send(err, 500);
